@@ -36,4 +36,3 @@ steps:
           echo "Code modified @ $COMMIT_PRESENT, continuing steps"
         fi
   - steps: << parameters.steps-to-run >>
-

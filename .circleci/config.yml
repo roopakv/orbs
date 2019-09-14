@@ -79,6 +79,11 @@ workflows:
 
       - publish-approval:
           type: approval
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-.*/
 
       # patch, minor, or major publishing
       - orb-tools/dev-promote-prod:

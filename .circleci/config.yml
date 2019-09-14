@@ -40,7 +40,6 @@ workflows:
       - orb-tools/trigger-integration-workflow:
           name: trigger-integration-dev
           ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          cleanup-tags: true
           requires: [orb-tools/publish-dev]
           filters:
             branches:
@@ -49,7 +48,6 @@ workflows:
       - orb-tools/trigger-integration-workflow:
           name: trigger-integration-master
           ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          cleanup-tags: true
           tag: master
           requires: [orb-tools/publish-dev]
           filters:
@@ -88,6 +86,7 @@ workflows:
       - orb-tools/dev-promote-prod:
           name: dev-promote-patch
           orb-name: roopakv/swissknife
+          cleanup-tags: true
           ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
           requires:
             - publish-approval
@@ -101,6 +100,7 @@ workflows:
           name: dev-promote-minor
           release: minor
           orb-name: roopakv/swissknife
+          cleanup-tags: true
           ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
           requires:
             - publish-approval
@@ -114,6 +114,7 @@ workflows:
           name: dev-promote-major
           release: major
           orb-name: roopakv/swissknife
+          cleanup-tags: true
           ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
           requires:
             - publish-approval

@@ -36,7 +36,7 @@ steps:
         setcommit || true
         if [ -z "$FILES_MODIFIED" ]
         then
-          echo "Files not modified. Halting job"
+          echo "Files not modified! Halting job"
           #circleci-agent step halt
         else
           echo "Files modified, continuing steps"

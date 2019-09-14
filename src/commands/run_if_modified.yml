@@ -30,14 +30,14 @@ steps:
 
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git diff --name-only << parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
         }
 
         setcommit || true
         if [ -z "$FILES_MODIFIED" ]
         then
           echo "Files not modified. Halting job"
-          # circleci-agent step halt
+          circleci-agent step halt
         else
           echo "Files modified, continuing steps"
         fi

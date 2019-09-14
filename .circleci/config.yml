@@ -108,7 +108,7 @@ workflows:
 
       # triggered by master branch commits
       - test_run_on_branch:
-          name: Test run if modified master
+          name: Test run on branch
           filters:
             branches:
               ignore: /.*/

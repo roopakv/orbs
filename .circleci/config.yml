@@ -25,6 +25,26 @@ jobs:
                   echo "neverexists was modified";
                   exit 1;
 
+  test_run_on_branch:
+    executor: orb-tools/ubuntu
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - swissknife/run_on_branch:
+          branch-pattern: $CIRCLE_BRANCH
+          steps-to-run:
+            - run:
+                command: |
+                  echo "will run on $CIRCLE_BRANCH";
+                  exit 0;
+      - swissknife/run_on_branch:
+          pattern: neverexists
+          steps-to-run:
+            - run:
+                command: |
+                  echo "should not run on this branch";
+                  exit 1;
+
 workflows:
   lint-pack-validate-publish-dev:
     jobs:
@@ -70,6 +90,23 @@ workflows:
 
       # triggered by master branch commits
       - test_run_if_modified:
+          name: Test run if modified master
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-.*/
+
+      # triggered by non-master branch commits
+      - test_run_on_branch:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /integration-.*/
+
+      # triggered by master branch commits
+      - test_run_on_branch:
           name: Test run if modified master
           filters:
             branches:

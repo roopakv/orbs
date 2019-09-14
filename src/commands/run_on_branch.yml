@@ -1,0 +1,30 @@
+description: Run steps if on branch
+
+parameters:
+  steps-to-run:
+    description: The steps to run if the files mentioned are modified
+    type: steps
+    default: []
+  branch-pattern:
+    description: The pattern of branches to look for
+    type: string
+    default: master
+
+steps:
+  - run:
+      name: Swissknife - Run on matching branch
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No circleci agent. These are in all circleci containers"; exit 1; }
+
+        if [[ "$CIRCLE_BRANCH" =~ << parameters.branch-pattern >> ]]; then
+          echo "On a matching branch going to run steps"
+        else
+          echo "Branch doesn't match"
+          circleci-agent step halt
+        fi
+  - steps: << parameters.steps-to-run >>

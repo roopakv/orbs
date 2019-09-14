@@ -25,8 +25,25 @@ jobs:
                   echo "neverexists was modified";
                   exit 1;
 
+integration-dev_filters: &integration-dev_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /integration-.*/
+
+integration-master_filters: &integration-master_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /master-.*/
+
+prod-deploy_requires: &prod-deploy_requires
+  [
+    publish-approval
+  ]
+
 workflows:
-  lint_pack-validate_publish-dev:
+  lint-pack-validate-publish-dev:
     jobs:
       - orb-tools/lint
 
@@ -59,6 +76,61 @@ workflows:
   build:
     jobs:
       - test_run_if_modified
+
+  integration_tests-prod_deploy:
+    jobs:
+      # triggered by non-master branch commits
+      - test_run_if_modified:
+          filters: *integration-dev_filters
+
+      # triggered by master branch commits
+      - test_run_if_modified:
+          name: Test run if modified master
+          filters: *integration-master_filters
+
+      - publish-approval:
+          type: approval
+          requires:
+            - test_run_if_modified
+
+      # patch, minor, or major publishing
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-patch
+          orb-name: roopakv/swissknife
+          cleanup-tags: true
+          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-patch.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-minor
+          release: minor
+          orb-name: roopakv/swissknife
+          cleanup-tags: true
+          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-minor.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-major
+          release: major
+          orb-name: roopakv/swissknife
+          cleanup-tags: true
+          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-major.*/
 
 executors:
   nodeimg:

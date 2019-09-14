@@ -79,8 +79,6 @@ workflows:
 
       - publish-approval:
           type: approval
-          requires:
-            - test_run_if_modified
 
       # patch, minor, or major publishing
       - orb-tools/dev-promote-prod:

@@ -6,7 +6,7 @@ orbs:
 
 jobs:
   test_run_if_modified:
-    executor: nodeimg
+    executor: orb-tools/ubuntu
     working_directory: /home/circleci/orbs
     steps:
       - checkout
@@ -26,6 +26,38 @@ jobs:
                   exit 1;
 
 workflows:
+  lint_pack-validate_publish-dev:
+    jobs:
+      - orb-tools/lint
+
+      - orb-tools/pack:
+          requires: [orb-tools/lint]
+
+      - orb-tools/publish-dev:
+          context: orb-publishing
+          orb-name: roopakv/swissknife
+          requires: [orb-tools/pack]
+
+      - orb-tools/trigger-integration-workflow:
+          context: orb-publishing
+          name: trigger-integration-dev
+          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          cleanup-tags: true
+          requires: [orb-tools/publish-dev]
+          filters:
+            branches:
+              ignore: master
+
+      - orb-tools/trigger-integration-workflow:
+          name: trigger-integration-master
+          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          cleanup-tags: true
+          tag: master
+          requires: [orb-tools/publish-dev]
+          filters:
+            branches:
+              only: master
+
   build:
     jobs:
       - test_run_if_modified

@@ -1,0 +1,39 @@
+description: Run steps if files are modified
+
+parameters:
+  steps-to-run:
+    description: The steps to run if the files mentioned are modified
+    type: steps
+    default: []
+  pattern:
+    description: The pattern to check are modified. Make sure to escape * and . as \* and \.
+    type: string
+    default: '*'
+
+steps:
+  - run:
+      name: Swissknife - Run if modified
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No circleci agent. These are in all circleci containers"; exit 1; }
+
+        DIFF_POINT=$(git merge-base HEAD origin/master)
+        COMMIT_PRESENT=""
+        setcommit () {
+          COMMIT_PRESENT=$(git log $DIFF_POINT..HEAD -1 --format=format:%H --full-diff << parameters.pattern >>)
+        }
+
+        setcommit || true
+        if [ -z "$COMMIT_PRESENT" ]
+        then
+          echo "Code not modified. Halting job"
+          circleci-agent step halt
+        else
+          echo "Code modified @ $COMMIT_PRESENT, continuing steps"
+        fi
+  - steps: << parameters.steps-to-run >>
+

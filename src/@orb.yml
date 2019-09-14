@@ -1,0 +1,8 @@
+
+version: 2.1
+
+description: >
+  This orb makes certain repeated operations on Circle CI easier. Right
+  from running commands only if some files are modified, to running
+  commands some branches only etc.
+  View this orb's source: https://github.com/roopakv/orbs

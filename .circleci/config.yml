@@ -1,0 +1,36 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@8.27.3
+  swissknife: roopakv/swissknife@dev:alpha
+
+jobs:
+  test_run_if_modified:
+    executor: nodeimg
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - swissknife/run_if_modified:
+          pattern: src
+          steps-to-run:
+            - run:
+                command: |
+                  echo "src was modified";
+                  exit 0;
+      - swissknife/run_if_modified:
+          pattern: neverexists
+          steps-to-run:
+            - run:
+                command: |
+                  echo "neverexists was modified";
+                  exit 1;
+
+workflows:
+  build:
+    jobs:
+      - test_run_if_modified
+
+executors:
+  nodeimg:
+    docker:
+      - image: circleci/node:stretch

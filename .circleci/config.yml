@@ -38,7 +38,7 @@ jobs:
                   echo "will run on $CIRCLE_BRANCH";
                   exit 0;
       - swissknife/run_on_branch:
-          pattern: neverexists
+          branch-pattern: neverexists
           steps-to-run:
             - run:
                 command: |

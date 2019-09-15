@@ -1,0 +1,41 @@
+description: |
+  Fail if git is dirty after running a set of steps.
+  For example running `go mod tidy` or `npm install` should not result in a dirty git directory.
+
+parameters:
+  steps-to-run:
+    description: The steps to run if the files mentioned are modified
+    type: steps
+    default: []
+  pattern:
+    description: |
+      The regex to match for dirty files. By default if any file is dirty the command fails. If overriden
+      can be used to check for only say `package-lock.json` or `go.mod`.
+    type: string
+    default: .*
+
+steps:
+  - steps: << parameters.steps-to-run >>
+  - run:
+      name: Swissknife - Fail if git dirty
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+
+        FILES_MODIFIED=""
+        setcommit () {
+          FILES_MODIFIED=$(git diff --name-only | grep -i -E '<< parameters.pattern >>')
+        }
+
+        setcommit || true
+        if [ -z "$FILES_MODIFIED" ]
+        then
+          echo "Files not modified. continuing"
+          exit 0;
+        else
+          echo "Files modified, failing"
+          exit 1;
+        fi

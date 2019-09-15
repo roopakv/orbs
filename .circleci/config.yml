@@ -45,6 +45,26 @@ jobs:
                   echo "should not run on this branch";
                   exit 1;
 
+  test_fail_if_dirty:
+    executor: orb-tools/ubuntu
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - swissknife/fail_if_dirty:
+          steps-to-run:
+            - run:
+                command: |
+                  echo "make nothing dirty";
+                  exit 0;
+      - swissknife/fail_if_dirty:
+          steps-to-run:
+            - swissknife/run_on_branch:
+                branch-pattern: roopakv
+                steps-to-run:
+                  - run:
+                      command: |
+                        circleci config pack src > orb-dirty.yml
+
 workflows:
   lint-pack-validate-publish-dev:
     jobs:
@@ -78,6 +98,7 @@ workflows:
     jobs:
       - test_run_if_modified
       - test_run_on_branch
+      - test_fail_if_dirty
 
   integration_tests-prod_deploy:
     jobs:
@@ -85,18 +106,12 @@ workflows:
       - test_run_if_modified:
           filters:
             branches:
-              ignore: /.*/
+              ignore:
+                - /.*/
             tags:
-              only: /integration-.*/
-
-      # triggered by master branch commits
-      - test_run_if_modified:
-          name: Test run if modified master
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-.*/
+              only:
+                - /integration-.*/
+                - /master-.*/
 
       # triggered by non-master branch commits
       - test_run_on_branch:
@@ -104,16 +119,20 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /integration-.*/
+              only:
+                - /integration-.*/
+                - /master-.*/
 
-      # triggered by master branch commits
-      - test_run_on_branch:
-          name: Test run on branch
+       # triggered by non-master branch commits
+      - test_fail_if_dirty:
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /master-.*/
+              only:
+                - /integration-.*/
+                - /master-.*/
+
 
       - publish-approval:
           type: approval

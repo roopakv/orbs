@@ -63,7 +63,7 @@ jobs:
                 steps-to-run:
                   - run:
                       command: |
-                        circleci config pack src > orb-dirty.yml
+                        circleci config pack src > LICENCE
 
 workflows:
   lint-pack-validate-publish-dev:

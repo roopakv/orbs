@@ -13,6 +13,12 @@ parameters:
       can be used to check for only say `package-lock.json` or `go.mod`.
     type: string
     default: .*
+  invert-pattern:
+    description: |
+      Use the invert of the pattern above. Defaults to false. This orb uses grep to search so setting invert
+      uses the -v command.
+    type: boolean
+    default: false
 
 steps:
   - steps: << parameters.steps-to-run >>
@@ -27,7 +33,7 @@ steps:
 
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git status -s | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git status -s | grep -i <<# parameters.invert-pattern >> -v <</ parameters.invert-pattern >> -E '<< parameters.pattern >>')
         }
 
         setcommit || true

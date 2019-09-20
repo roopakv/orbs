@@ -1,0 +1,37 @@
+parameters:
+  branch-to-consider:
+    description: The branch on which we will wait for workflows
+    type: string
+    default: master
+  max-wait-time:
+    description: |
+      The max wait time in seconds a job should wait for before killing itself.
+    type: string
+    default: "600"
+  kill-gracefully:
+    description: If true and time exceeds max wait time, dies without failing the job
+    type: string
+    default: "true"
+  workflow-name:
+    description: The type of workflows to wait for. This can be a regex
+    type: string
+    default: "*"
+  vcs-type:
+    description: What is the VCS for this project
+    type: string
+    default: github
+  sleep-time-between-checks:
+    description: How long to sleep between checks.
+    type: string
+    default: "30"
+
+docker:
+  - image: circleci/node:10
+steps:
+  - wait_for_workflow:
+      branch-to-consider: <<parameters.branch-to-consider>>
+      max-wait-time: <<parameters.max-wait-time>>
+      kill-gracefully: <<parameters.kill-gracefully>>
+      workflow-name: <<parameters.workflow-name>>
+      vcs-type: <<parameters.vcs-type>>
+      sleep-time-between-checks: <<parameters.sleep-time-between-checks>>

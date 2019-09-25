@@ -1,0 +1,51 @@
+description: |
+  Send build status to PagerDuty integration.
+
+parameters:
+  integration-key:
+    description: Integration key (a.k.a routing key) provided by PagerDuty.
+    type: string
+  when:
+    description: When to send the notification to PagerDuty. Possible values are on_fail and on_success
+    type: string
+    default: on_fail
+  branch:
+    description: Runs only on specific branch.
+    type: string
+    default: master
+
+steps:
+  - run:
+      when: << parameters.when >>
+      name: Notify PagerDuty
+      command: |
+        SUMMARY="$CIRCLE_PROJECT_REPONAME/$CIRCLE_BRANCH/$CIRCLE_JOB build succeeded"
+        SEVERITY=info
+        PD_ROUTING_KEY=<< parameters.integration-key >>
+
+        if [ "$CIRCLE_BRANCH" != "<< parameters.branch >>" ]; then
+          echo "Branch $CIRCLE_BRANCH is not the same as << parameters.branch >>. No notification sent"
+          exit 0;
+        fi
+
+        if [ "<< parameters.when >>" = "on_fail" ]; then
+          SUMMARY="$CIRCLE_PROJECT_REPONAME/$CIRCLE_BRANCH/$CIRCLE_JOB build failed"
+          SEVERITY=warning
+        fi
+
+        body=$(cat \<<EOF
+        {
+          "event_action": "trigger",
+          "payload": {
+            "source": "circleci",
+            "summary": "$SUMMARY",
+            "severity": "$SEVERITY"
+          },
+          "client": "CircleCI Failed Build",
+          "client_url": "$CIRCLE_BUILD_URL",
+          "routing_key": "$PD_ROUTING_KEY"
+        }
+        EOF)
+
+        echo "Sending notification..."
+        curl -X POST -d "$body" https://events.pagerduty.com/v2/enqueue

@@ -1,0 +1,74 @@
+description: |
+  This command waits for another job in this workflow. Since right now Circle doesnt let
+  you queue up jobs irrespective of whether they fail or not. This is a faux queue where
+  the command stalls till the other job succeeds.
+
+parameters:
+  job-name:
+    description: The job on which to wait. If job not found continue immediately
+    type: string
+  max-wait-time:
+    description: |
+      The max wait time in seconds a job should wait for before killing itself.
+    type: string
+    default: "1800"
+  kill-gracefully:
+    description: If true and time exceeds max wait time, completes and lets future steps continue
+    type: string
+    default: "true"
+  sleep-time-between-checks:
+    description: How long to sleep between checks.
+    type: string
+    default: "30"
+
+steps:
+  - run:
+      name: Swissknife - Wait for job in workflow
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+
+        api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/jobs"
+
+        mkdir -p /tmp/swissknife
+
+        # This is a global variable used to get return value for get_job_status
+        job_status=""
+        job_number=""
+
+        get_job_status() {
+          wf_url="https://circleci.com/$api_endpoint?circle-token=${CIRCLE_TOKEN}"
+          curl -f -s $wf_url > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
+          job_status=$(jq -r '.items[] | select(.name=="<< parameters.job-name >>") | .status' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+          job_number=$(jq -r '.items[] | select(.name=="<< parameters.job-name >>") | .job_number' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+        }
+
+        current_wait_time=0
+
+        while true; do
+          get_job_status
+          if [[ "$job_status" == "success" || "$job_status" == "failed" || "$job_status" == "" ]]; then
+            echo "Its finally my turn. exiting"
+            exit 0
+          else
+            echo "Looks like the other guy ($job_number) is still not done ($job_status)."
+            echo "Going to sleep for << parameters.sleep-time-between-checks >>"
+            sleep << parameters.sleep-time-between-checks >>
+            current_wait_time=$(( current_wait_time + << parameters.sleep-time-between-checks >> ))
+          fi
+
+          if (( $current_wait_time > << parameters.max-wait-time >> )); then
+            if [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+              echo "Proceeding with future steps";
+              exit 0;
+            else
+              echo "Failing job by exiting forcefully";
+              exit 1;
+            fi
+          fi
+        done
+
+

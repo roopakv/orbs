@@ -19,6 +19,14 @@ parameters:
       uses the -v command.
     type: boolean
     default: false
+  custom-error-message:
+    description: The error message to fail with if git is directory.
+    type: string
+    default: Files modified, failing
+  print-modified-files:
+    description: Whether to print the list of modified files.
+    type: boolean
+    default: false
 
 steps:
   - steps: << parameters.steps-to-run >>
@@ -42,6 +50,10 @@ steps:
           echo "Files not modified. continuing"
           exit 0;
         else
-          echo "Files modified, failing"
+          <<# parameters.print-modified-files >>
+          echo "The files that have been modified are:"
+          echo $FILES_MODIFIED
+          <</ parameters.print-modified-files >>
+          echo "<< parameters.custom-error-message >>"
           exit 1;
         fi

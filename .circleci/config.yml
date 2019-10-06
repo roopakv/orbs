@@ -57,6 +57,7 @@ jobs:
                   echo "make nothing dirty";
                   exit 0;
       - swissknife/fail_if_dirty:
+          custom-error-message: Something is wrong, very very wrong
           steps-to-run:
             - swissknife/run_on_branch:
                 branch-pattern: roopakv

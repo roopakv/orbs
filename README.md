@@ -2,7 +2,7 @@
 
 This orb helps make common operations in various CircleCI workflows easier. Some of the smaller
 useful commands are "fail if dirty", "run if modified", "run on branch". There are a few more
-complicated commands such as "wait for workflow" and "wait for job" which ave niche usecases.
+complicated commands such as "wait for workflow" and "wait for job" which have niche usecases.
 
 Official Orb page: [https://circleci.com/orbs/registry/orb/roopakv/swissknife](https://circleci.com/orbs/registry/orb/roopakv/swissknife)
 

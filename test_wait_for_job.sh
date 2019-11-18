@@ -1,5 +1,5 @@
-CIRCLE_WORKFLOW_ID=123e5a80-1c4e-42c9-9d29-4131403835f7
-api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/jobs"
+CIRCLE_WORKFLOW_ID=4ca8a629-569b-4f52-bd6c-118f5fd9101c
+api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
 
 can_i_run="true"
 
@@ -12,8 +12,8 @@ job_number=""
 get_job_status() {
   wf_url="https://circleci.com/$api_endpoint?circle-token=${CIRCLE_TOKEN}"
   curl -f -s $wf_url > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
-  job_status=$(jq -r '.items[] | select(.name=="lint-and-test") | .status' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
-  job_number=$(jq -r '.items[] | select(.name=="lint-and-test") | .job_number' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+  job_status=$(jq -r '.items[] | select(.name=="lint-and-misc") | .status' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+  job_number=$(jq -r '.items[] | select(.name=="lint-and-misc") | .job_number' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
 }
 
 current_wait_time=0

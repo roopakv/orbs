@@ -31,7 +31,7 @@ steps:
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
 
-        api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/jobs"
+        api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
 
         mkdir -p /tmp/swissknife
 

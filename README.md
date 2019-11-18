@@ -13,7 +13,7 @@ Add swissknife to your Circle yml as follows
 
 ```
 orbs:
-  swissknife: roopakv/swissknife@0.11.0
+  swissknife: roopakv/swissknife@0.12.0
 ```
 
 Once you have defined the Orb you can use the following commands

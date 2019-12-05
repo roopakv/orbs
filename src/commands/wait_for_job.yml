@@ -50,7 +50,7 @@ steps:
 
         while true; do
           get_job_status
-          if [[ "$job_status" == "success" || "$job_status" == "failed" || "$job_status" == "canceled" ]]; then
+          if [[ "$job_status" == "success" || "$job_status" == "failed" || "$job_status" == "canceled" || "$job_status" == "" ]]; then
             echo "Its finally my turn. exiting"
             exit 0
           else

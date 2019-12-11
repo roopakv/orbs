@@ -1,0 +1,35 @@
+description: |
+  This command publishes a release to the specified Github Repository using the tag name specified
+  The orb looks for $GITHUB_TOKEN otherwise you can pass it in as the github-token-variable parameter
+
+parameters:
+  tag:
+    description: The tag that you want to tag your branch with. Required
+    type: string
+  github-token-variable:
+    description: Environment variable for Github Token
+    type: env_var_name
+    default: GITHUB_TOKEN
+  user:
+    description: Username for the Github Project
+    type: env_var_name
+    default: CIRCLE_PROJECT_USERNAME
+  repository:
+    description: GitHub repository
+    type: env_var_name
+    default: CIRCLE_PROJECT_REPONAME
+
+steps:
+  - run:
+      name: Github release with specified tag
+      command: |
+        mkdir -p /tmp/swissknife/
+        wget -P /tmp/swissknife/ -qi - https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2
+
+        tar xjf /tmp/swissknife/*.tar.bz2 -C /tmp/swissknife
+
+        /tmp/swissknife/bin/linux/amd64/github-release release \
+          --security-token << parameters.github-token-variable >> \
+          --user << parameters.user >> \
+          --repo << parameters.repository >> \
+          --tag << parameters.tag >>

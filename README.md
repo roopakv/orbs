@@ -54,7 +54,14 @@ this branch have been completed.
 Note: By blocking workflows we mean that the job simply sleeps till it is its turn to run. i.e. you will be using circle credits
 to sleep this long (maybe use small containers?)
 
-Look [here](https://circleci.com/orbs/registry/orb/roopakv/swissknife#commands-wait_for_workflow) for uage.
+Look [here](https://circleci.com/orbs/registry/orb/roopakv/swissknife#commands-wait_for_workflow) for usage.
+
+### Github Release
+
+This lets you create a Github release to a specified repository using custom tags. This can be useful if you want to generate
+releases on each master commit for instance.
+
+Look [here](https://circleci.com/orbs/registry/orb/roopakv/swissknife#commands-publish_github_release) for usage.
 
 ## Contribution
 

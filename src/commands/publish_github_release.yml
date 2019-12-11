@@ -1,7 +1,6 @@
 description: |
-  This command publishes a release to the active GitHub repository using the tag name specified
-  This requires a GitHub token be set as $GITHUB_TOKEN. You must also specify the tag and a description
-  You must have linux installed
+  This command publishes a release to the specified Github Repository using the tag name specified
+  The orb looks for $GITHUB_TOKEN otherwise you can pass it in as the github-token-variable parameter
 
 parameters:
   tag:

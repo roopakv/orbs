@@ -1,5 +1,8 @@
 #!/bin/bash
 
+GITHUB_REPO="sleet"
+GITHUB_USER="BoltApp"
+
 set -ex
 echo "Running test"
 mkdir -p /tmp/swissknife/
@@ -7,10 +10,10 @@ wget -P /tmp/swissknife/ -q "https://github.com/aktau/github-release/releases/do
 
 echo "Unpacking file"
 tar xjf /tmp/swissknife/*.tar.bz2 -C /tmp/swissknife
-now=$(date +"%s%N")
+now=$(date +"%s")
 echo "Now . " + $now
 /tmp/swissknife/bin/darwin/amd64/github-release release \
   --security-token $GITHUB_TOKEN \
-  --user "BoltApp" \
-  --repo "sleet" \
+  --user "$GITHUB_USER" \
+  --repo "$GITHUB_REPO" \
   --tag v1.0.1-$now

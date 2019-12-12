@@ -29,7 +29,7 @@ steps:
         tar xjf /tmp/swissknife/*.tar.bz2 -C /tmp/swissknife
 
         /tmp/swissknife/bin/linux/amd64/github-release release \
-          --security-token << parameters.github-token-variable >> \
-          --user << parameters.user >> \
-          --repo << parameters.repository >> \
+          --security-token "$<< parameters.github-token-variable >>" \
+          --user "$<< parameters.user >>" \
+          --repo "$<< parameters.repository >>" \
           --tag << parameters.tag >>

@@ -9,15 +9,15 @@ parameters:
   github-token-variable:
     description: Environment variable for Github Token
     type: env_var_name
-    default: GITHUB_TOKEN
+    default: $GITHUB_TOKEN
   user:
     description: Username for the Github Project
     type: env_var_name
-    default: CIRCLE_PROJECT_USERNAME
+    default: $CIRCLE_PROJECT_USERNAME
   repository:
     description: GitHub repository
     type: env_var_name
-    default: CIRCLE_PROJECT_REPONAME
+    default: $CIRCLE_PROJECT_REPONAME
 
 steps:
   - run:

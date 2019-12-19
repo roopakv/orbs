@@ -16,6 +16,10 @@ parameters:
       the pattern to use would be ^src.*|^lib.*
     type: string
     default: .*
+  always-run-on-branch:
+    description: The branch to always run the steps on
+    type: string
+    default: ""
 
 steps:
   - run:
@@ -27,6 +31,11 @@ steps:
         fi
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No circleci agent. These are in all circleci containers"; exit 1; }
+
+        if [ "$CIRCLE_BRANCH" == "<< parameters.always-run-on-branch >>" ]; then
+          echo "Should always run on << parameters.always-run-on-branch >>. Exiting and continuing to run"
+          exit 0;
+        fi
 
         FILES_MODIFIED=""
         setcommit () {

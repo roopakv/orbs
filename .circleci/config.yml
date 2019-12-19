@@ -19,6 +19,14 @@ jobs:
                   exit 0;
       - swissknife/run_if_modified:
           pattern: neverexists
+          always-run-on-branch: roopakv/always_run
+          steps-to-run:
+            - run:
+                command: |
+                  echo "this will always in roopakv/always_run";
+                  exit 1;
+      - swissknife/run_if_modified:
+          pattern: neverexists
           steps-to-run:
             - run:
                 command: |

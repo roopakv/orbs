@@ -6,7 +6,7 @@ parameters:
     type: string
     default: master
   use-divergence-point:
-    description: Find the divergence from the branch passed above, rather than the current >>..HEAD
+    description: Find the divergence from the branch passed above, rather than the current HEAD
     type: boolean
     default: false
   steps-to-run:

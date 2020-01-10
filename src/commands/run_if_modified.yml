@@ -5,6 +5,10 @@ parameters:
     description: The branch against which to check against. This can also be a commit SHA
     type: string
     default: master
+  use-divergence-point:
+    description: Find the divergence from the branch passed above, rather than the current HEAD
+    type: boolean
+    default: false
   steps-to-run:
     description: The steps to run if the files mentioned are modified
     type: steps
@@ -40,6 +44,9 @@ steps:
         FILES_MODIFIED=""
         setcommit () {
           FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
+          <<# parameters.use-divergence-point >>
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '<< parameters.pattern >>')
+          <</ parameters.use-divergence-point >>
         }
 
         setcommit || true

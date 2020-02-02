@@ -22,10 +22,14 @@ parameters:
     description: What is the VCS for this project
     type: string
     default: github
+  repo-name:
+    description: The repo from which to get artifacts
+    type: env_var_name
+    default: CIRCLE_PROJECT_REPONAME
 
 steps:
   - run:
-      name: Swissknife - Fail if git dirty
+      name: Swissknife - Get job artifacts
       command: |
         if [ -z "$BASH" ]; then
           echo Bash not installed.
@@ -35,9 +39,14 @@ steps:
 
         JOB_NUM=$<< parameters.job-number >>
 
+        if [[ "$JOB_NUM" == "" || "$JOB_NUM" = "0" ]]; then
+          echo "No job number, exitting!"
+          exit 0;
+        fi
+
         mkdir -p << parameters.save-to-directory >>
 
-        SLUG="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+        SLUG="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/$<< parameters.repo-name >>"
         API_ENDPOINT="project/$SLUG/$JOB_NUM/artifacts"
 
         get_artifact() {
@@ -45,14 +54,18 @@ steps:
           curl -f -s $ARTIFACTS_URL > /tmp/swissknife/artifacts.json
           REQUIRED_ARTIFACT_URL=$(jq -r '.items[] | select(.path| test("<< parameters.file-name-pattern >>")) | .url' /tmp/swissknife/artifacts.json)
 
+          if [[ "$REQUIRED_ARTIFACT_URL" == "" ]]; then
+            echo "Artifact URL not found on circle, are you sure it exists?"
+            exit 0;
+          fi
+
           cd << parameters.save-to-directory >>
           if [[ "<< parameters.file-name >>" == "NA" ]]; then
             curl -H "Circle-Token: $CIRCLE_TOKEN" --remote-name $REQUIRED_ARTIFACT_URL
           else
             curl -H "Circle-Token: $CIRCLE_TOKEN" -O << parameters.file-name >> $REQUIRED_ARTIFACT_URL
           fi
+          echo "File downloaded to << parameters.save-to-directory >>"
         }
 
         get_artifact
-
-        echo "File downloaded to << parameters.save-to-directory >>"

@@ -16,8 +16,8 @@ parameters:
     default: "NA"
   job-number:
     description: the job number to pull artifacts from
-    type: string
-    default: "0"
+    type: env_var_name
+    default: CIRCLE_PREVIOUS_BUILD_NUM
   vcs-type:
     description: What is the VCS for this project
     type: string
@@ -33,10 +33,7 @@ steps:
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
 
-        JOB_NUM=<< parameters.job-number >>
-        if [[ "$JOB_NUM" == "0" ]]; then
-          JOB_NUM=$CIRCLE_PREVIOUS_BUILD_NUM;
-        fi
+        JOB_NUM=$<< parameters.job-number >>
 
         mkdir -p << parameters.save-to-directory >>
 

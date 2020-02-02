@@ -49,6 +49,8 @@ steps:
         SLUG="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/$<< parameters.repo-name >>"
         API_ENDPOINT="project/$SLUG/$JOB_NUM/artifacts"
 
+        echo "Getting artifact from $API_ENDPOINT"
+
         get_artifact() {
           ARTIFACTS_URL="https://circleci.com/api/v2/${API_ENDPOINT}?circle-token=${CIRCLE_TOKEN}"
           curl -f -s $ARTIFACTS_URL > /tmp/swissknife/artifacts.json
@@ -59,11 +61,13 @@ steps:
             exit 0;
           fi
 
+          echo "Path to artifact $REQUIRED_ARTIFACT_URL"
+
           cd << parameters.save-to-directory >>
           if [[ "<< parameters.file-name >>" == "NA" ]]; then
             curl -H "Circle-Token: $CIRCLE_TOKEN" --remote-name $REQUIRED_ARTIFACT_URL
           else
-            curl -H "Circle-Token: $CIRCLE_TOKEN" -O << parameters.file-name >> $REQUIRED_ARTIFACT_URL
+            curl -H "Circle-Token: $CIRCLE_TOKEN" -o << parameters.file-name >> $REQUIRED_ARTIFACT_URL
           fi
           echo "File downloaded to << parameters.save-to-directory >>"
         }

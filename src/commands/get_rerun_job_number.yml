@@ -1,0 +1,74 @@
+description: |
+  This command gets the job number of which it is a rerun and sets it to the shell as RERUN_OF
+  This requires a circle token be set as $CIRCLE_TOKEN
+
+parameters:
+  vcs-type:
+    description: What is the VCS for this project
+    type: string
+    default: github
+
+steps:
+  - run:
+      name: Swissknife - Get rerun of and set to shell
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+
+        mkdir -p /tmp/swissknife
+
+        SLUG="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+
+        PIPELINE_ID=""
+        PREVIOUS_WORKFLOW_ID=""
+        PREVIOUS_JOB=""
+
+        get_pipeline_id() {
+          PIPELINE_API_ENDPOINT="https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}?circle-token=${CIRCLE_TOKEN}"
+          curl -f -s $PIPELINE_API_ENDPOINT > /tmp/swissknife/current_wf.json
+          PIPELINE_ID=$(jq -r '.pipeline_id' /tmp/swissknife/current_wf.json)
+        }
+
+        get_previous_workflow() {
+          WORKFLOWS_API_ENDPOINT="https://circleci.com/api/v2/pipeline/${PIPELINE_ID}/workflow?circle-token=${CIRCLE_TOKEN}"
+          curl -f -s $WORKFLOWS_API_ENDPOINT > /tmp/swissknife/current_pipeline_workflows.json
+          PREVIOUS_WORKFLOW_ID=$(jq -r --arg curworkflow "$CIRCLE_WORKFLOW_ID" '.items[.items | map(.id == $curworkflow) | index(true) + 1].id' /tmp/swissknife/current_pipeline_workflows.json)
+        }
+
+        get_previous_job() {
+          JOBS_IN_WORKFLOW_ENDPOINT="https://circleci.com/api/v2/workflow/${PREVIOUS_WORKFLOW_ID}/job?circle-token=${CIRCLE_TOKEN}"
+          curl -f -s $JOBS_IN_WORKFLOW_ENDPOINT > /tmp/swissknife/current_wf_jobs.json
+          PREVIOUS_JOB=$(jq -r --arg curjobname "$CIRCLE_JOB" '.items[] | select(.name | test("^" + $curjobname + "$")).job_number' /tmp/swissknife/current_wf_jobs.json)
+        }
+
+        get_pipeline_id
+
+        if [[ "$PIPELINE_ID" == "" || "$PIPELINE_ID" == "null" ]]; then
+          echo "This should not happen, file an issue with swissknife!";
+          exit 0;
+        fi
+
+        echo "Found pipeline id $PIPELINE_ID";
+
+        get_previous_workflow
+
+        if [[ "$PREVIOUS_WORKFLOW_ID" == "" || "$PREVIOUS_WORKFLOW_ID" == "null" ]]; then
+          echo "Seems like there are no previous workflows in this case. no re-runs exist";
+          exit 0;
+        fi
+
+        echo "Found previous workflow id $PREVIOUS_WORKFLOW_ID";
+
+        get_previous_job
+
+        if [[ "$PREVIOUS_JOB" == "" || "$PREVIOUS_JOB" == "null" ]]; then
+          echo "This should not happen, file an issue with swissknife!";
+          exit 0;
+        fi
+
+        echo "This job is a rerun of $PREVIOUS_JOB, adding this to the bash env."
+
+        echo "export RERUN_OF=$PREVIOUS_JOB" >> $BASH_ENV

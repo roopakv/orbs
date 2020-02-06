@@ -41,7 +41,7 @@ parameters:
     default: "{}"
 steps:
   - run:
-      name: Swissknife - Run if modified
+      name: Swissknife - Trigger pipeline if modified
       command: |
         if [ -z "$BASH" ]; then
           echo Bash not installed.

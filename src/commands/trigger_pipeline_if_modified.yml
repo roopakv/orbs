@@ -56,7 +56,7 @@ steps:
             -H 'Accept: */*' \
             -H 'Content-Type: application/json' \
             -d '{
-              "branch": "$CIRCLE_BRANCH",
+              "branch": "'$CIRCLE_BRANCH'",
               "parameters": << parameters.custom-parameters >>
             }'
         }

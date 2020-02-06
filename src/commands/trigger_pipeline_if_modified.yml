@@ -1,0 +1,86 @@
+description: Triggers a workflow if directory / file is modified. Continues if not
+
+parameters:
+  base-branch:
+    description: The branch against which to check against. This can also be a commit SHA
+    type: string
+    default: master
+  use-divergence-point:
+    description: Find the divergence from the branch passed above, rather than the current HEAD
+    type: boolean
+    default: false
+  pattern:
+    description: |
+      The regex to match files against. The command uses grep to search file names.
+      If you want to enforce starting with use ^. For checking if files in src/ or lib/ were modified,
+      the pattern to use would be ^src.*|^lib.*
+    type: string
+    default: .*
+  always-trigger-on-branch:
+    description: The branch to always run the steps on
+    type: string
+    default: ""
+  workflow-name:
+    description: The workflow to Triggers
+    type: string
+  repo-name:
+    type: env_var_name
+    description: The repo to trigger the workflow on
+    default: CIRCLE_PROJECT_REPONAME
+  user:
+    description: Username for the Github Project
+    type: env_var_name
+    default: CIRCLE_PROJECT_USERNAME
+  vcs-type:
+    description: What is the VCS for this project
+    type: string
+    default: github
+  custom-parameters:
+    description: Custom parameters passed to the pipeline
+    type: string
+    default: "{}"
+steps:
+  - run:
+      name: Swissknife - Run if modified
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No circleci agent. These are in all circleci containers"; exit 1; }
+
+        trigger_workflow() {
+          curl --silent -X POST \
+            "https://circleci.com/api/v2/project/<< parameters.vcs-type >>/$<< parameters.user >>/$<< parameters.repo-name >>/pipeline?circle-token=${CIRCLE_TOKEN}" \
+            -H 'Accept: */*' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "branch": "$CIRCLE_BRANCH",
+              "parameters": << parameters.custom-parameters >>
+            }'
+        }
+
+        if [ "$CIRCLE_BRANCH" == "<< parameters.always-trigger-on-branch >>" ]; then
+          echo "Should always run on << parameters.always-trigger-on-branch >>. Trigerring"
+          trigger_workflow
+          exit 0;
+        fi
+
+        FILES_MODIFIED=""
+        setcommit () {
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
+          <<# parameters.use-divergence-point >>
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '<< parameters.pattern >>')
+          <</ parameters.use-divergence-point >>
+        }
+
+        setcommit || true
+        if [ -z "$FILES_MODIFIED" ]
+        then
+          echo "Files not modified. exitting and continuing with other steps"
+          exit 0;
+        else
+          echo "Files modified, trigerring workflow."
+          trigger_workflow
+        fi

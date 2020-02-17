@@ -1,0 +1,2 @@
+docker:
+  - image: roopakv/packer-ci:1.5.4

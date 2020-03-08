@@ -11,7 +11,8 @@ usage:
 
   jobs:
     second-job:
-      executor: node
+      docker:
+        - image: circleci/node:latest
       working_directory: /home/circleci/project
       steps:
         - swissknife/wait_for_job:

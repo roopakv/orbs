@@ -11,14 +11,14 @@ usage:
     swissknife: roopakv/swissknife@x.y
 
   jobs:
-    some-job:
-      trigger-needed-workflows:
-        executor: base-executor
-        steps:
-          - checkout
-          - swissknife/trigger_pipeline_if_modified:
-              always-trigger-on-branch: master
-              custom-parameters: '{"run_main_workflow": false, "run_custom_integration_tests": true}'
-              pattern: ^(directory|\.circleci).*
-              use-divergence-point: true
-              workflow-name: monitors-ci
+    trigger-needed-workflows:
+      docker:
+        - image: circleci/node:latest
+      steps:
+        - checkout
+        - swissknife/trigger_pipeline_if_modified:
+            always-trigger-on-branch: master
+            custom-parameters: '{"run_main_workflow": false, "run_custom_integration_tests": true}'
+            pattern: ^(directory|\.circleci).*
+            use-divergence-point: true
+            workflow-name: monitors-ci

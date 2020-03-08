@@ -1,0 +1,23 @@
+description: |
+  This command waits for another job in this workflow. Since right now Circle doesnt let
+  you queue up jobs irrespective of whether they fail or not. This is a faux queue where
+  the command stalls till the other job succeeds.
+
+usage:
+  version: 2.1
+
+  orbs:
+    swissknife: roopakv/swissknife@x.y
+
+  jobs:
+    second-job:
+      docker:
+        - image: circleci/node:latest
+      working_directory: /home/circleci/project
+      steps:
+        - swissknife/wait_for_job:
+            job-name: "First job name"
+        - run:
+            name: Run after first job
+            command: |
+              echo "This code will run only after first job is finished (either successfully or failure)"

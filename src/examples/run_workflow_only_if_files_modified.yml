@@ -1,0 +1,24 @@
+description: |
+  Triggers a workflow if directory / file is modified. Continues if not. In this
+  example, we have two pipeline vars run_main_workflow and trigger_other_workflow, the
+  main workflow  has a job called some-job which runs another workflow for
+  integration tests. It is set up this way since we dont want to run integration tests for every change
+
+usage:
+  version: 2.1
+
+  orbs:
+    swissknife: roopakv/swissknife@x.y
+
+  jobs:
+    trigger-needed-workflows:
+      docker:
+        - image: circleci/node:latest
+      steps:
+        - checkout
+        - swissknife/trigger_pipeline_if_modified:
+            always-trigger-on-branch: master
+            custom-parameters: '{"run_main_workflow": false, "run_custom_integration_tests": true}'
+            pattern: ^(directory|\.circleci).*
+            use-divergence-point: true
+            workflow-name: monitors-ci

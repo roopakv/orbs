@@ -1,0 +1,20 @@
+description: |
+  This command waits for running workflows of a kind on a given branch to complete. Adding This
+  as the first step in a job will make the job wait till it is the only running workflow.
+  This requires a circle token be set as $CIRCLE_TOKEN
+
+usage:
+  version: 2.1
+
+  orbs:
+    swissknife: roopakv/swissknife@x.y
+
+  jobs:
+    some-job:
+      docker:
+        - image: circleci/node:latest
+      working_directory: /home/circleci/project
+      steps:
+        - swissknife/wait_for_workflow:
+            max-wait-time: "1800"
+            workflow-name: ^(staging|production|sandbox|regression-staging|regression-sandbox)$

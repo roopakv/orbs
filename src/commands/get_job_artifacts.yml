@@ -1,6 +1,6 @@
 description: |
-  This command gets artifacts from a circle job and stores in a directory
-  This requires a circle token be set as $CIRCLE_TOKEN
+  This command gets artifacts from a Circle CI job and stores in a directory
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
 
 parameters:
   file-name-pattern:
@@ -57,7 +57,7 @@ steps:
           REQUIRED_ARTIFACT_URL=$(jq -r '.items[] | select(.path| test("<< parameters.file-name-pattern >>")) | .url' /tmp/swissknife/artifacts.json)
 
           if [[ "$REQUIRED_ARTIFACT_URL" == "" ]]; then
-            echo "Artifact URL not found on circle, are you sure it exists?"
+            echo "Artifact URL not found on Circle CI, are you sure it exists?"
             exit 0;
           fi
 

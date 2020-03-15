@@ -1,5 +1,5 @@
 description: |
-  This command waits for another job in this workflow. Since right now Circle doesnt let
+  This command waits for another job in this workflow. Since right now Circle CI doesnt let
   you queue up jobs irrespective of whether they fail or not. This is a faux queue where
   the command stalls till the other job succeeds.
 

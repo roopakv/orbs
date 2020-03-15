@@ -48,7 +48,7 @@ steps:
           exit 1
         fi
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
-        circleci-agent >/dev/null 2>&1 || { echo >&2 "No circleci agent. These are in all circleci containers"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No Circle CI agent. These are in all Circle CI containers"; exit 1; }
 
         trigger_workflow() {
           curl --silent -X POST \

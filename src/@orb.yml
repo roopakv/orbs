@@ -1,7 +1,9 @@
 version: 2.1
 
 description: >
-  This orb makes certain repeated operations (commonly used in monorepos) on Circle CI easier. Right
-  from running commands only if some files are modified, to running
-  commands some branches only etc.
+  This orb makes certain repeated operations (commonly used in monorepos) on Circle CI easier.
+  Some of the functionality provided by this orb are, queuing up jobs within a workflow, queuing up workflows,
+  finding artifacts from other jobs, fail a build if git dirty, run only if directory modified on branch,
+  get the rerun job number, trigger pipeline if directory modified, publish github releases.
+  #queue #runIfModified #artifacts #github #releases #triggerPipeline
   View this orb's source: https://github.com/roopakv/orbs

@@ -1,7 +1,7 @@
 description: |
   This command waits for running workflows of a kind on a given branch to complete. Adding This
   as the first step in a job will make the job wait till it is the only running workflow.
-  This requires a circle token be set as $CIRCLE_TOKEN
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
 
 usage:
   version: 2.1

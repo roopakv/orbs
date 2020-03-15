@@ -1,7 +1,7 @@
 description: |
   This command waits for running workflows of a kind on a given branch to complete. Adding This
   as the first step in a job will make the job wait till it is the only running workflow.
-  This requires a circle token be set as $CIRCLE_TOKEN
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
 
 parameters:
   branch-to-consider:
@@ -90,7 +90,7 @@ steps:
           echo "Cancelleing workflow by cancelling build ${CIRCLE_BUILD_NUM}"
           cancel_workflow_url="https://circleci.com/api/v1.1/project/$slug/${CIRCLE_BUILD_NUM}/cancel?circle-token=${CIRCLE_TOKEN}"
           curl -s -X POST $cancel_workflow_url > /dev/null
-          # Give CircleCI enough time to kill this workflow
+          # Give Circle CI enough time to kill this workflow
           sleep 30
           # If the job wasnt canceled in 30 seconds fail.
           exit 1;

@@ -1,6 +1,6 @@
 description: |
   This command gets the job number of which it is a rerun and sets it to the shell as RERUN_OF
-  This requires a circle token be set as $CIRCLE_TOKEN
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
 
 parameters:
   vcs-type:

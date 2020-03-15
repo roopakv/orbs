@@ -1,6 +1,6 @@
 description: |
   This job waits for workflows based on the parameters passed in. It requires a
-  circle token be set as $CIRCLE_TOKEN. Make other jobs in your workflow require this
+  Circle CI token be set as $CIRCLE_TOKEN. Make other jobs in your workflow require this
   one to start which will result in queueing up workflows.
 
 parameters:

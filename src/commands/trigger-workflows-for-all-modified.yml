@@ -19,7 +19,7 @@ description: |
   as a command to allow flexibility and not force custom executors etc.
 
   This command is fairly complex, and the best way to understand the use of this
-  command, take a look at the example at ...
+  command, take a look at the example at https://github.com/roopakv/circle-monorepo-via-swissknife
 
 parameters:
   base-branch:

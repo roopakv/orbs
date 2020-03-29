@@ -20,9 +20,6 @@ parameters:
     description: The branch to always run the steps on
     type: string
     default: ""
-  workflow-name:
-    description: The workflow to Triggers
-    type: string
   repo-name:
     type: env_var_name
     description: The repo to trigger the workflow on

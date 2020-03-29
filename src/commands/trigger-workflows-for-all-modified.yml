@@ -92,8 +92,8 @@ steps:
 
         # Validate input JSON.
         echo "Validating input JSON";
-        echo '<< parameters.code-param-name-map >>' | { jq type || echo "Invalid input map JSON"; exit 1; }
-        echo '<< parameters.additional-param-map >>' | { jq type || echo "Invalid additional param map JSON"; exit 1; }
+        echo '<< parameters.code-param-name-map >>' | jq type || { echo "Invalid input map JSON"; exit 1; }
+        echo '<< parameters.additional-param-map >>' | jq type || { echo "Invalid additional param map JSON"; exit 1; }
 
         mkdir -p /tmp/swissknife
         touch /tmp/swissknife/workflow_params.json
@@ -102,25 +102,24 @@ steps:
         FILES_MODIFIED=""
         get_modified_files_for_regex() {
           FILES_MODIFIED=""
-          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '$1')
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E $1)
           <<# parameters.use-divergence-point >>
-          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '$1')
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E $1)
           <</ parameters.use-divergence-point >>
         }
 
         get_modified_files_for_commit_regex() {
-          FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E '$1')
+          FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E $1)
         }
 
-        atleast_one_param="0";
         append_to_params() {
-          atleast_one_param="1";
+          touch /tmp/swissknife/params_exist
           current_data=`cat /tmp/swissknife/workflow_params.json`
           echo $current_data | jq --arg param $1 '. + {($param): true}' | jq -cr > /tmp/swissknife/workflow_params.json
         }
 
         trigger_workflow() {
-          if [[ "$atleast_one_param" == "0" ]]; then
+          if [[ ! -f "/tmp/swissknife/params_exist" ]]; then
             echo "No params added, which means no workflows to be triggered. Skipping call to Circle CI";
             exit 0;
           fi
@@ -135,7 +134,7 @@ steps:
             -H 'Content-Type: application/json' \
             -d '{
               "branch": "'$CIRCLE_BRANCH'",
-              "parameters": "'$custom_params'"
+              "parameters": '$custom_params'
             }'
         }
 
@@ -144,18 +143,17 @@ steps:
           echo "$input_map" | jq -c '.[]' |
           while IFS=$"\n" read -r mod; do
               echo ""
-              echo "Processing $mod"
               regex=$(echo "$mod" | jq -r '.regex')
               param_name=$(echo "$mod" | jq -r '.param_name')
 
+              echo "Processing param_name: $param_name regex: $regex";
+
               if [[ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]]; then
-                get_modified_files_for_commit_regex $regex
+                get_modified_files_for_commit_regex $regex || true
               else
-                get_modified_files_for_regex $regex
+                get_modified_files_for_regex $regex || true
               fi
 
-              echo "Files modified for $param_name"
-              echo "$FILES_MODIFIED"
               if [ -z "$FILES_MODIFIED" ]
               then
                 echo "Files not modified for $param_name";
@@ -165,6 +163,10 @@ steps:
                 echo "appending param to list of inputs"
                 echo ""
                 append_to_params $param_name
+
+                echo "Current Params:"
+                cat /tmp/swissknife/workflow_params.json
+                echo ""
               fi
           done
         }
@@ -179,7 +181,10 @@ steps:
               param_name=$(echo "$mod" | jq -r '.param_name')
 
               append_to_params $param_name
-              echo "end"
+
+              echo "Current Params:"
+              cat /tmp/swissknife/workflow_params.json
+              echo ""
           done
         }
 
@@ -193,5 +198,6 @@ steps:
           exit 0;
         fi
 
+        echo "Non base branch";
         generate_branch_params
         trigger_workflow

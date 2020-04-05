@@ -1,6 +1,6 @@
 description: |
   This command builds the circle config in the specified directory. It validates the config.
-  If built with no validation errors you can choose to fail the build if what is 
+  If built with no validation errors you can choose to fail the build if what is
   commited is different from what is built. This prevents divergence of code.
 
 parameters:
@@ -17,7 +17,7 @@ parameters:
     type: boolean
     default: true
     description: |
-      Will install the circle cli for you. If false you will need to install it. Needs sudo access.      
+      Will install the circle cli for you. If false you will need to install it. Needs sudo access.
   push-up-to-origin:
     description: |
       If there is a difference push up the built config to the current branch on origin.
@@ -46,10 +46,10 @@ steps:
 
         if [[ "<< parameters.install-circle-cli >>" == "true" ]]; then
           curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
-        else 
+        else
           circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or chaneg swissknife params"; exit 1; }
-        fi 
-        
+        fi
+
         circleci config pack << parameters.directory-of-src >> > config.yml
         circleci config validate
   - when:
@@ -64,12 +64,12 @@ steps:
       condition: << parameters.push-up-to-origin >>
       steps:
         - run:
-            name: Swissknife - Push up circle diff to origin 
+            name: Swissknife - Push up circle diff to origin
             command: |
               git config --global user.email "swissknife@roopakv.com"
               git config --global user.name "Swissknife CircleCI"
 
-              
+
               if [[ "$CIRCLE_BRANCH" =~ "<< parameters.skip-push-on-branch >>" ]]; then
                 echo "Stopping since we are on a branch configured to skip"
                 exit 0;

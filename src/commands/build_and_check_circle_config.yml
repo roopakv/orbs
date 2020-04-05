@@ -1,0 +1,82 @@
+description: |
+  This command builds the circle config in the specified directory. It validates the config.
+  If built with no validation errors you can choose to fail the build if what is
+  commited is different from what is built. This prevents divergence of code.
+
+parameters:
+  directory-of-src:
+    description: The directory containing circleci config src relative to repo root.
+    type: string
+    default: .circleci/src
+  fail-if-dirty:
+    description: |
+      Fail if dirty
+    type: boolean
+    default: true
+  install-circle-cli:
+    type: boolean
+    default: true
+    description: |
+      Will install the circle cli for you. If false you will need to install it. Needs sudo access.
+  push-up-to-origin:
+    description: |
+      If there is a difference push up the built config to the current branch on origin.
+      This will work only if the required SSH keys for github or gitlab are added already.
+      For this to work, fail-if-dirty needs to be false.
+    type: boolean
+    default: false
+  skip-push-on-branch:
+    description: |
+      The branches on which pushing is skipped
+    type: string
+    default: master
+  custom-error-message:
+    description: The error message to fail with if git is directory.
+    type: string
+    default: Your circle source files and config.yml have diverged
+steps:
+  - run:
+      name: Swissknife - Build and check circle config
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+
+        if [[ "<< parameters.install-circle-cli >>" == "true" ]]; then
+          curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
+        else
+          circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or chaneg swissknife params"; exit 1; }
+        fi
+
+        circleci config pack << parameters.directory-of-src >> > .circleci/config.yml
+        circleci config validate
+  - when:
+      condition: << parameters.fail-if-dirty >>
+      steps:
+        - fail_if_dirty:
+            pattern: .*circleci/config.yml
+            invert-pattern: false
+            custom-error-message: << parameters.custom-error-message >>
+            print-modified-files: true
+  - when:
+      condition: << parameters.push-up-to-origin >>
+      steps:
+        - run:
+            name: Swissknife - Push up circle diff to origin
+            command: |
+              git config --global user.email "swissknife@roopakv.com"
+              git config --global user.name "Swissknife Orb"
+
+              if [[ "$CIRCLE_BRANCH" =~ "<< parameters.skip-push-on-branch >>" ]]; then
+                echo "Stopping since we are on a branch configured to skip"
+                exit 0;
+              fi
+
+              echo "Pushing to branch: $CIRCLE_BRANCH"
+
+              git diff --quiet || ( \
+                git commit -am "Update circle config.yml" && \
+                git push origin $CIRCLE_BRANCH \
+              )

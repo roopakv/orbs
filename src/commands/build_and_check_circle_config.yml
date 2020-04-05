@@ -50,7 +50,7 @@ steps:
           circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or chaneg swissknife params"; exit 1; }
         fi
 
-        circleci config pack << parameters.directory-of-src >> > config.yml
+        circleci config pack << parameters.directory-of-src >> > .circleci/config.yml
         circleci config validate
   - when:
       condition: << parameters.fail-if-dirty >>
@@ -67,8 +67,7 @@ steps:
             name: Swissknife - Push up circle diff to origin
             command: |
               git config --global user.email "swissknife@roopakv.com"
-              git config --global user.name "Swissknife CircleCI"
-
+              git config --global user.name "Swissknife Orb"
 
               if [[ "$CIRCLE_BRANCH" =~ "<< parameters.skip-push-on-branch >>" ]]; then
                 echo "Stopping since we are on a branch configured to skip"

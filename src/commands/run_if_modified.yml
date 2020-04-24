@@ -24,6 +24,11 @@ parameters:
     description: The branch to always run the steps on
     type: string
     default: ""
+  check-last-commit-on-base-branch:
+    description: |
+      This will make the check run for the latest commit on the base branch.
+    type: boolean
+    default: false
 
 steps:
   - run:
@@ -47,6 +52,11 @@ steps:
           <<# parameters.use-divergence-point >>
           FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '<< parameters.pattern >>')
           <</ parameters.use-divergence-point >>
+          <<# parameters.check-last-commit-on-base-branch >>
+          if [[ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]]; then
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E '<< parameters.pattern >>')
+          fi
+          <</ parameters.check-last-commit-on-base-branch >>
         }
 
         setcommit || true

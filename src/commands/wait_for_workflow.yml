@@ -29,6 +29,12 @@ parameters:
     description: How long to sleep between checks.
     type: string
     default: "30"
+  run-on-branch:
+    description: |
+      The branches to actually wait on. By default this waits on all branches. If set to anything but
+      '*' the wait will run only on the specified branch
+    type: string
+    default: "*"
 
 steps:
   - run:
@@ -39,6 +45,11 @@ steps:
           exit 1
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+
+        if [[ "<< parameters.run-on-branch >>" != "*" && "<< parameters.run-on-branch >>" != "$CIRCLE_BRANCH" ]]; then
+          echo "Chosen to run only on << parameters.run-on-branch >> and currently we are on $CIRCLE_BRANCH, exiting";
+          exit 0;
+        fi
 
         slug="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
         branch_to_consider="<< parameters.branch-to-consider >>"

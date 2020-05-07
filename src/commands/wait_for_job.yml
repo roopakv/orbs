@@ -23,7 +23,7 @@ parameters:
   run-on-branch:
     description: |
       The branches to actually wait on. By default this waits on all branches. If set to anything but
-      '*' the wait will run only on the specified branche
+      '*' the wait will run only on the specified branch
     type: string
     default: "*"
 

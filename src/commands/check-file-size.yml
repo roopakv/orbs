@@ -60,6 +60,7 @@ steps:
           exit 0;
         fi
 
+        any_files_above_limit=false
         for file in $FILES_MODIFIED; do
           filesize=""
           if [[ "<< parameters.mac-or-linux-mode >>" == "linux" ]]; then
@@ -70,6 +71,13 @@ steps:
 
           if (( filesize > << parameters.size-limit >> )); then
             echo "File above size limit (<< parameters.size-limit >>bytes) : $file -> $filesize bytes"
-            echo "<< parameters.custom-error-message >>"
+
           fi
         done
+
+        if [[ "$any_files_above_limit" == "true" ]]; then
+          echo "Atleast one file is above the size limit"
+          echo "<< parameters.custom-error-message >>"
+          exit 1;
+        fi
+

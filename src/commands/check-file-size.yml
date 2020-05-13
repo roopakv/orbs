@@ -16,7 +16,7 @@ parameters:
     default: true
   size-limit:
     description: The max size of any file that can be added to the repo in bytes.
-    type: string
+    type: integer
   exclusion-pattern:
     description: Regex pattern containing files that can bypass this limit. By default nothing
     type: string
@@ -70,8 +70,8 @@ steps:
           fi
 
           if (( filesize > << parameters.size-limit >> )); then
-            echo "File above size limit (<< parameters.size-limit >>bytes) : $file -> $filesize bytes"
-
+            echo "File above size limit (<< parameters.size-limit >> bytes) : $file -> $filesize bytes"
+            any_files_above_limit=true
           fi
         done
 

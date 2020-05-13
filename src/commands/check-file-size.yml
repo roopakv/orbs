@@ -1,0 +1,83 @@
+description: |
+  Fails a build if there is any file greater than a defined limit.
+
+parameters:
+  base-branch:
+    description: |
+      The branch against which to check against. By default this check doesnt run against every
+      file in history where you might already have large files. We rather check current the current
+      head against the base branch. This check is meant specifically for PRs and is skipped on the base
+      branch.
+    type: string
+    default: master
+  use-divergence-point:
+    description: Find the divergence from the branch passed above, rather than the current HEAD
+    type: boolean
+    default: true
+  size-limit:
+    description: The max size of any file that can be added to the repo in bytes.
+    type: integer
+  exclusion-pattern:
+    description: Regex pattern containing files that can bypass this limit. By default nothing
+    type: string
+    default: ^$
+  custom-error-message:
+    description: The error message to fail with.
+    type: string
+    default: You checked in a file which is larger than one we allow. Remove this file and try again.
+  mac-or-linux-mode:
+    description: Checking file size is done using stat which is different on mac vs linux. Defaults to linux mode
+    type: string
+    default: linux
+
+steps:
+  - run:
+      name: Swissknife - Fail Check file size
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+
+        if [ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]; then
+          echo "Skipping to run on the base branch!"
+          exit 0;
+        fi
+
+        FILES_MODIFIED=""
+        setcommit () {
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E -v '<< parameters.exclusion-pattern >>')
+          <<# parameters.use-divergence-point >>
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E -v '<< parameters.exclusion-pattern >>')
+          <</ parameters.use-divergence-point >>
+        }
+
+        setcommit || true
+        if [ -z "$FILES_MODIFIED" ]
+        then
+          echo "Included files not modified. finishing up"
+          exit 0;
+        fi
+
+        any_files_above_limit=false
+        for file in $FILES_MODIFIED; do
+          filesize=""
+          if [[ "<< parameters.mac-or-linux-mode >>" == "linux" ]]; then
+            filesize=$(stat -c%s $file)
+          else
+            filesize=$(stat -f%z $file)
+          fi
+
+          if (( filesize > << parameters.size-limit >> )); then
+            echo "File above size limit (<< parameters.size-limit >> bytes) : $file -> $filesize bytes"
+            any_files_above_limit=true
+          fi
+        done
+
+        if [[ "$any_files_above_limit" == "true" ]]; then
+          echo "Atleast one file is above the size limit"
+          echo "<< parameters.custom-error-message >>"
+          exit 1;
+        fi
+

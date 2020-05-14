@@ -64,9 +64,9 @@ steps:
         for file in $FILES_MODIFIED; do
           filesize=""
           if [[ "<< parameters.mac-or-linux-mode >>" == "linux" ]]; then
-            filesize=$(stat -c%s $file)
+            filesize=$(stat -c%s $file || echo 0)
           else
-            filesize=$(stat -f%z $file)
+            filesize=$(stat -f%z $file || echo 0)
           fi
 
           if (( filesize > << parameters.size-limit >> )); then

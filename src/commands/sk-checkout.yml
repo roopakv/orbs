@@ -1,0 +1,38 @@
+description: |
+  Checks out code with the SWISSKNIFE_SHA. This is mainly to be used with trigger-workflows-for-all-modified.
+  Note that this job by default overwrites the CIRCLE_SHA1 as well as adds SWISSKNIFE_SHA1. You can choose to not
+  to overwrite the SHA using the overwrite-sha param
+
+parameters:
+  swissknife_sha:
+    description: |
+      The swissknife sha. This should always be the pipeline param "swissknife_sha". Since Circle prevents
+      orbs from reading pipeline params this needs to be explicitly passed in with the value
+      "<< pipeline.parameters.swissknife_sha >>"
+    type: string
+  overwrite-sha:
+    description: Whether or not to overwrite CIRCLE_SHA1
+    type: boolean
+    default: true
+
+steps:
+  - checkout
+  - run:
+      name: Swissknife - Checkout SHA
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+
+        if [ "" == "<< parameters.swissknife_sha >>" ]; then
+          echo "Swissknife sha not passed in. Continuing with circle SHA"
+          exit 0;
+        fi
+
+        git checkout << parameters.swissknife_sha >>
+        echo "export SWISSKNIFE_SHA=<< parameters.swissknife_sha >>" >> $BASH_ENV
+        <<# parameters.overwrite-sha >>
+        echo "export CIRCLE_SHA1=<< parameters.swissknife_sha >>" >> $BASH_ENV
+        <</ parameters.overwrite-sha >>

@@ -79,6 +79,20 @@ parameters:
     description: What is the VCS for this project
     type: string
     default: github
+  use-swissknife-sha:
+    description: |
+      Adds the current commit sha to the trigger so that you can checkout the relevant commit. This is mainly
+      because Circle does not let you specify commit when triggering a pipeline. If you suspect your repo has
+      a high velocity and would like ot make sure that you are definitely triggering on the same commit set this
+      to true.
+
+      Note that this has additional requirements:
+      - You need to use the sk-checkout command which is a wrapper on the checkout command
+      - You need to add a pipeline param 'swissknife_sha' to your config and pass it in to the swissknife/sk-checkout command
+
+      You can see an example of this in the example repo above.
+    type: boolean
+    default: false
 steps:
   - run:
       name: Swissknife - Trigger workflows for all modified
@@ -95,9 +109,17 @@ steps:
         echo '<< parameters.code-param-name-map >>' | jq type || { echo "Invalid input map JSON"; exit 1; }
         echo '<< parameters.additional-param-map >>' | jq type || { echo "Invalid additional param map JSON"; exit 1; }
 
+        append_string_to_params() {
+          current_data=`cat /tmp/swissknife/workflow_params.json`
+          echo $current_data | jq --arg param $1 --arg param2 $2 '. + {($param): ($param2)}' | jq -cr > /tmp/swissknife/workflow_params.json
+        }
+
         mkdir -p /tmp/swissknife
         touch /tmp/swissknife/workflow_params.json
         echo '<< parameters.additional-param-map >>' | jq -j . > /tmp/swissknife/workflow_params.json
+        <<# parameters.use-swissknife-sha >>
+        append_string_to_params "swissknife_sha" $CIRCLE_SHA1
+        <</ parameters.use-swissknife-sha >>
 
         FILES_MODIFIED=""
         get_modified_files_for_regex() {

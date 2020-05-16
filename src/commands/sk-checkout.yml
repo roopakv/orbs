@@ -11,7 +11,9 @@ parameters:
       "<< pipeline.parameters.swissknife_sha >>"
     type: string
   overwrite-sha:
-    description: Whether or not to overwrite CIRCLE_SHA1
+    description: |
+      Whether or not to overwrite CIRCLE_SHA1. This is sort of a best effort basis, since
+      Circle uses some magic to inject the circle variables.
     type: boolean
     default: true
 
@@ -36,4 +38,6 @@ steps:
         echo "export SWISSKNIFE_SHA=<< parameters.swissknife_sha >>" >> $BASH_ENV
         <<# parameters.overwrite-sha >>
         echo "export CIRCLE_SHA1=<< parameters.swissknife_sha >>" >> $BASH_ENV
+        echo "export CIRCLE_SHA1=<< parameters.swissknife_sha >>" >> ~/.bashrc
+        echo "export CIRCLE_SHA1=<< parameters.swissknife_sha >>" >> ~/.profile
         <</ parameters.overwrite-sha >>

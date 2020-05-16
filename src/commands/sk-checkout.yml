@@ -31,7 +31,8 @@ steps:
           exit 0;
         fi
 
-        git checkout << parameters.swissknife_sha >>
+        git reset --hard "<< parameters.swissknife_sha >>"
+        git checkout -q -B "$CIRCLE_BRANCH"
         echo "export SWISSKNIFE_SHA=<< parameters.swissknife_sha >>" >> $BASH_ENV
         <<# parameters.overwrite-sha >>
         echo "export CIRCLE_SHA1=<< parameters.swissknife_sha >>" >> $BASH_ENV

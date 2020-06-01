@@ -1,7 +1,7 @@
 description: |
   Send a webhook that workflow has started. This is currently in beta and uses
   the swissknife backend. To use this you need to have a swissknife API available
-  from beta.swissknife.dev. Set your Swissknife api key in the SWISSKNIFE_API_KEY env 
+  from beta.swissknife.dev. Set your Swissknife api key in the SWISSKNIFE_API_KEY env
   variable.
 
   This command sends a webhook on workflow start. The swissknife backend de-dupes

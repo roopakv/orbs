@@ -103,6 +103,10 @@ steps:
         fi
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No Circle CI agent. These are in all Circle CI containers"; exit 1; }
+        if [[ "$CIRCLE_TOKEN" == "" ]]; then
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          exit 1;
+        fi
 
         # Validate input JSON.
         echo "Validating input JSON";

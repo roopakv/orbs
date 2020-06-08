@@ -36,6 +36,10 @@ steps:
           exit 1
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+        if [[ "$CIRCLE_TOKEN" == "" ]]; then
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          exit 1;
+        fi
 
         if [[ "<< parameters.run-on-branch >>" != "*" && "<< parameters.run-on-branch >>" != "$CIRCLE_BRANCH" ]]; then
           echo "Chosen to run only on << parameters.run-on-branch >> and currently we are on $CIRCLE_BRANCH, exiting";

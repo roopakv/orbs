@@ -1,15 +1,13 @@
 description: |
-  Send a webhook that a workflow has started. This is currently in beta and uses
+  Send a webhook that a job has started. This is currently in beta and uses
   the swissknife backend. To use this you need to have a swissknife API available
   from beta.swissknife.dev. Set your Swissknife api key in the SWISSKNIFE_API_KEY env
   variable.
 
-  This command sends a webhook on workflow start. The swissknife backend de-dupes
-  workflow start across various jobs and it is ok to have this step run from many jobs,
-  only 1 webhook will be posted to the destination.
+  This command sends a webhook on job start.
 
   In order to have this webhook sent as early as possible, make this step as early as possible
-  on the job.
+  on the job, preferably event before the checkout step.
 
   All webhooks are signed with the Signing key set in Swissknife.
 
@@ -21,10 +19,14 @@ parameters:
     description: Fails this step on error otherwise, this is best effort
     type: boolean
     default: true
+  vcs-type:
+    description: The type of VCS backing this repo. Defaults to gh for github
+    type: string
+    default: gh
 
 steps:
   - run:
-      name: Swissknife Beta - Workflow started webhook
+      name: Swissknife Beta - Job started webhook
       command: |
         if [ -z "$BASH" ]; then
           echo Bash not installed.
@@ -37,13 +39,14 @@ steps:
 
         echo "Enqueing webhook"
         status_code=$(curl -s -o /tmp/swissknife_workflow.txt -w "%{http_code}" -X POST \
-          https://beta.swissknife.dev/api/circle/webhooks/workflow.started \
+          https://beta.swissknife.dev/api/circle/webhooks/job.started \
           -H 'Content-Type: application/json' \
           -H 'User-Agent: Swissknife-Orb' \
           -H "Swissknife-Api-Key: $SWISSKNIFE_API_KEY" \
           -H 'cache-control: no-cache' \
           -d '{
-          "workflow_id": "'$CIRCLE_WORKFLOW_ID'",
+          "slug": "<< parameters.vcs-type >>/'$CIRCLE_PROJECT_USERNAME'/'$CIRCLE_PROJECT_REPONAME'"
+          "job_number": "'$CIRCLE_BUILD_NUM'",
           "destination": "<< parameters.destination >>"
         }')
         cat /tmp/swissknife_workflow.txt

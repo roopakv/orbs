@@ -37,7 +37,7 @@ steps:
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
         if [[ "$CIRCLE_TOKEN" == "" ]]; then
-          echo "CRICLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
           exit 1;
         fi
 

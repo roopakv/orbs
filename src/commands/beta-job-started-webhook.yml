@@ -45,7 +45,7 @@ steps:
           -H "Swissknife-Api-Key: $SWISSKNIFE_API_KEY" \
           -H 'cache-control: no-cache' \
           -d '{
-          "slug": "<< parameters.vcs-type >>/'$CIRCLE_PROJECT_USERNAME'/'$CIRCLE_PROJECT_REPONAME'"
+          "slug": "<< parameters.vcs-type >>/'$CIRCLE_PROJECT_USERNAME'/'$CIRCLE_PROJECT_REPONAME'",
           "job_number": "'$CIRCLE_BUILD_NUM'",
           "destination": "<< parameters.destination >>"
         }')

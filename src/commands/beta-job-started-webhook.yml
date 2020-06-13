@@ -37,7 +37,7 @@ steps:
           exit 1;
         fi
 
-        echo "Enqueing webhook"
+        echo "Enqueing jo started webhook"
         status_code=$(curl -s -o /tmp/swissknife_workflow.txt -w "%{http_code}" -X POST \
           https://beta.swissknife.dev/api/circle/webhooks/job.started \
           -H 'Content-Type: application/json' \

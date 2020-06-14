@@ -79,6 +79,14 @@ parameters:
     description: What is the VCS for this project
     type: string
     default: github
+  search-mode:
+    description: |
+      By default searching for file matches uses grep with the extended matcher. The other option
+      involves using perl. Perl supports more complicated regexes such as negative lookahead etc.
+      Note that perl mode only works if perl is installed.
+    type: enum
+    default: grep
+    enum: ["grep", "perl"]
   use-swissknife-sha:
     description: |
       Adds the current commit sha to the trigger so that you can checkout the relevant commit. This is mainly
@@ -108,6 +116,9 @@ steps:
           exit 1;
         fi
 
+        SEARCH_MODE=<< parameters.search-mode >>
+        echo "The search mode is $SEARCH_MODE"
+
         # Validate input JSON.
         echo "Validating input JSON";
         echo '<< parameters.code-param-name-map >>' | jq type || { echo "Invalid input map JSON"; exit 1; }
@@ -128,14 +139,25 @@ steps:
         FILES_MODIFIED=""
         get_modified_files_for_regex() {
           FILES_MODIFIED=""
-          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E $1)
-          <<# parameters.use-divergence-point >>
-          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E $1)
-          <</ parameters.use-divergence-point >>
+          if [[ "$SEARCH_MODE" == "grep" ]]; then
+            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E $1)
+            <<# parameters.use-divergence-point >>
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E $1)
+            <</ parameters.use-divergence-point >>
+          else
+            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | perl -nle "print if m{$1}")
+            <<# parameters.use-divergence-point >>
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | perl -nle "print if m{$1}")
+            <</ parameters.use-divergence-point >>
+          fi
         }
 
         get_modified_files_for_commit_regex() {
-          FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E $1)
+          if [[ "$SEARCH_MODE" == "grep" ]]; then
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E $1)
+          else
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | perl -nle "print if m{$1}")
+          fi
         }
 
         append_to_params() {

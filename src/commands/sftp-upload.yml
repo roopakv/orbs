@@ -1,0 +1,51 @@
+description: |
+  This command uploads files in a directory to an FTP server.
+
+  This command auto confirms SFTP host and does not delete files that have been
+  deleted locally. i.e. one way sync.
+
+parameters:
+  directory-to-upload:
+    description: the directory to upload
+    type: string
+  save-to-directory:
+    description: Where to save the files to on the remote server.
+    type: string
+  host:
+    description: The host to where we are uploading. Use format host:port
+    type: string
+  username:
+    description: The username to auth with.
+    type: env_var_name
+    default: SK_FTP_USERNAME
+  password:
+    description: The password to auth with.
+    type: env_var_name
+    default: SK_FTP_PASSWORD
+
+steps:
+  - run:
+      name: Swissknife - SFTP upload
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        if [ -z "$SK_FTP_USERNAME" ]; then
+          echo No username found.
+          exit 1
+        fi
+        if [ -z "$SK_FTP_PASSWORD" ]; then
+          echo No password found.
+          exit 1
+        fi
+        hash sftp 2>/dev/null || { echo >&2 "sftp is not installed.  Aborting."; exit 1; }
+
+        # Makes it easier to transfer files
+        sudo apt-get install lftp
+
+        export LFTP_PASSWORD=$<< parameters.password >>
+
+        lftp -e "set sftp:auto-confirm yes; mirror -R << parameters.directory-to-upload >> << parameters.save-to-directory >>; bye" --env-password sftp://$<< parameters.username >>@<< parameters.host >>
+
+        echo "Finished tranferring files"

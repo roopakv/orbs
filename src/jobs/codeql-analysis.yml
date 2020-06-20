@@ -1,0 +1,49 @@
+description: |
+  This job waits for workflows based on the parameters passed in. It requires a
+  Circle CI token be set as $CIRCLE_TOKEN. Make other jobs in your workflow require this
+  one to start which will result in queueing up workflows.
+
+parameters:
+  languages:
+    description: |
+      Set to comma separated list of languages to specify languages to analyze. If unset make
+      sure to set the GITHUB_TOKEN env variable to get the most prominent language in the repo
+      from github
+    type: string
+    default: auto
+  output-dir:
+    description: The directory where output is stored
+    type: string
+    default: /home/circleci/analysis
+  ram-limit:
+    description: The amount of ram the analysis can use
+    type: string
+    default: "1024"
+  resource-class:
+    description: The resource class for the executor
+    type: string
+    default: medium
+  report-to-swissknife:
+    description: |
+      Whether or not to report to the swissknife service which makes analyzing results
+      easy. Setting this to true requires that the swissknife API key be set in the env var
+      SWISSKNIFE_API_KEY. You can find your key by signing in at beta.swissknife.dev
+    type: boolean
+    default: true
+  custom-init-steps:
+    description: |
+      These steps are run after checkout giving you the chance to hook in and do some work
+      before codeQL analysis is done.
+    type: steps
+    default: []
+
+executor: codeql-runner
+resource_class: << parameters.resource-class >>
+working_directory: /home/circleci/project
+steps:
+  - codeql-analysis:
+      languages: << parameters.languages >>
+      output-dir: << parameters.output-dir >>
+      ram-limit: << parameters.ram-limit >>
+      report-to-swissknife: << parameters.report-to-swissknife >>
+      custom-init-steps: << parameters.custom-init-steps >>

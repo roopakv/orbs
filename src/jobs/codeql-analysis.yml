@@ -2,7 +2,7 @@ description: |
   Runs CodeQL Analysis on your code base. This is a variant of the codeQL action and the results
   can be optionally be reported to the Swissknife service for easy viewing. Currently python3,
   golang and javascript are analyzed out of the box. Adding support for other languages is coming
-  soon. Right now results are saved as artifacts and support for viewing results on 
+  soon. Right now results are saved as artifacts and support for viewing results on
   beta.swissknife.dev is also coming soon.
 
 parameters:

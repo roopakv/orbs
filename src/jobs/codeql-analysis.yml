@@ -25,7 +25,7 @@ parameters:
     default: medium
   report-to-swissknife:
     description: |
-      Whether or not to report to the swissknife service which makes analyzing results 
+      Whether or not to report to the swissknife service which makes analyzing results
       easy. Setting this to true requires that the swissknife API key be set in the env var
       SWISSKNIFE_API_KEY. You can find your key by signing in at beta.swissknife.dev
     type: boolean

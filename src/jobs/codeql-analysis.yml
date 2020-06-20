@@ -23,6 +23,19 @@ parameters:
     description: The resource class for the executor
     type: string
     default: medium
+  report-to-swissknife:
+    description: |
+      Whether or not to report to the swissknife service which makes analyzing results 
+      easy. Setting this to true requires that the swissknife API key be set in the env var
+      SWISSKNIFE_API_KEY. You can find your key by signing in at beta.swissknife.dev
+    type: boolean
+    default: true
+  custom-init-steps:
+    description: |
+      These steps are run after checkout giving you the chance to hook in and do some work
+      before codeQL analysis is done.
+    type: steps
+    default: []
 
 executor: codeql-runner
 resource_class: << parameters.resource-class >>
@@ -32,3 +45,5 @@ steps:
       languages: << parameters.languages >>
       output-dir: << parameters.output-dir >>
       ram-limit: << parameters.ram-limit >>
+      report-to-swissknife: << parameters.report-to-swissknife >>
+      custom-init-steps: << parameters.custom-init-steps >>

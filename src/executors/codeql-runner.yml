@@ -1,2 +1,2 @@
 docker:
-  - image: swissknifedev/codeql-runner:v0.1.0
+  - image: swissknifedev/codeql-runner:v0.1.1

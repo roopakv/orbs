@@ -14,7 +14,7 @@ parameters:
   output-dir:
     description: The directory where output is stored
     type: string
-    default: /home/circle/analysis
+    default: /home/circleci/analysis
   ram-limit:
     description: The amount of ram the analysis can use
     type: string
@@ -26,6 +26,7 @@ parameters:
 
 executor: codeql-runner
 resource_class: << parameters.resource-class >>
+working_directory: /home/circleci/project
 steps:
   - codeql-analysis:
       languages: << parameters.languages >>

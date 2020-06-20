@@ -1,0 +1,33 @@
+description: |
+  This job waits for workflows based on the parameters passed in. It requires a
+  Circle CI token be set as $CIRCLE_TOKEN. Make other jobs in your workflow require this
+  one to start which will result in queueing up workflows.
+
+parameters:
+  languages:
+    description: |
+      Set to comma separated list of languages to specify languages to analyze. If unset make
+      sure to set the GITHUB_TOKEN env variable to get the most prominent language in the repo
+      from github
+    type: string
+    default: auto
+  output-dir:
+    description: The directory where output is stored
+    type: string
+    default: /home/circle/analysis
+  ram-limit:
+    description: The amount of ram the analysis can use
+    type: string
+    default: "1024"
+  resource-class:
+    description: The resource class for the executor
+    type: string
+    default: medium
+
+executor: codeql-runner
+resource_class: << parameters.resource-class >>
+steps:
+  - codeql-analysis:
+      languages: << parameters.languages >>
+      output-dir: << parameters.output-dir >>
+      ram-limit: << parameters.ram-limit >>

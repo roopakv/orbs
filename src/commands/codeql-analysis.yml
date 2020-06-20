@@ -1,0 +1,60 @@
+description: |
+  Runs CodeQL Analysis on your code base. This is a variant of the codeQL action and the results
+  can be optionally be reported to the Swissknife service for easy viewing.
+
+parameters:
+  languages:
+    description: |
+      Set to comma separated list of languages to specify languages to analyze. If unset make
+      sure to set the GITHUB_TOKEN env variable to get the most prominent language in the repo
+      from github
+    type: string
+    default: auto
+  output-dir:
+    description: The directory where output is stored
+    type: string
+    default: /home/circle/analysis
+  ram-limit:
+    description: The amount of ram the analysis can use
+    type: string
+    default: "1024"
+
+steps:
+  - run:
+      name: Swissknife - CodeQL setup env
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        if [[ "<< parameters.languages >>" == "auto" && "$GITHUB_TOKEN" == "" ]]; then
+          echo "To use auto language analysis set a github token in GITHUB_TOKEN";
+          exit 1;
+        fi
+
+        echo "export SK_OUTPUT=<< parameters.output-dir >>" >> $BASH_ENV
+        echo "export SK_CODEQL_RAM=<< parameters.ram-limit >>" >> $BASH_ENV
+        if [[ "<< parameters.languages >>" != "auto" ]]; then
+          echo "export CODEQL_ACTION_LANGUAGES=<< parameters.languages >>" >> $BASH_ENV
+        fi
+  - run:
+      name: Swissknife - CodeQL setup tracer
+      command: |
+        cd /var/swissknife/lib
+
+        node lib/index.js setup
+  - run:
+      name: Swissknife - CodeQL Build
+      command: |
+        cd /var/swissknife/lib
+
+        node lib/index.js build
+  - run:
+      name: Swissknife - Analyze
+      command: |
+        cd /var/swissknife/lib
+
+        node lib/index.js finalize
+  - store_artifacts:
+      path: << parameters.output-dir >>

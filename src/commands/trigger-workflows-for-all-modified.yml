@@ -126,7 +126,7 @@ steps:
 
         append_string_to_params() {
           current_data=`cat /tmp/swissknife/workflow_params.json`
-          echo $current_data | jq --arg param $1 --arg param2 $2 '. + {($param): ($param2)}' | jq -cr > /tmp/swissknife/workflow_params.json
+          echo $current_data | jq --arg param $1 --arg param2 $2 '. + {($param): ($param2)}' | jq -cr '' > /tmp/swissknife/workflow_params.json
         }
 
         mkdir -p /tmp/swissknife
@@ -163,7 +163,7 @@ steps:
         append_to_params() {
           touch /tmp/swissknife/params_exist
           current_data=`cat /tmp/swissknife/workflow_params.json`
-          echo $current_data | jq --arg param $1 '. + {($param): true}' | jq -cr > /tmp/swissknife/workflow_params.json
+          echo $current_data | jq --arg param $1 '. + {($param): true}' | jq -cr '' > /tmp/swissknife/workflow_params.json
         }
 
         trigger_workflow() {

@@ -83,5 +83,11 @@ steps:
         cd /var/swissknife/lib
 
         node lib/index.js finalize
+  - run:
+      name: Swissknife - Report
+      command: |
+        cd /var/swissknife/lib
+
+        node lib/index.js swissknife_report
   - store_artifacts:
       path: << parameters.output-dir >>

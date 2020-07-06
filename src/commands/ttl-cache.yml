@@ -1,0 +1,146 @@
+description: |
+  Creates a cache which has a custom expiry. This kind of cache helps things like linting where the
+  cache could be busted say once a day making lint jobs much faster. Other examples of use cases
+  are go build cache, webpack etc.
+
+parameters:
+  type:
+    description: Whether this is save or restore step.
+    type: enum
+    enum: ["restore", "save"]
+  cache-key-prefix:
+    description: |
+      The cache key prefix to differentiate between caches.
+    type: string
+  ttl-period:
+    description: |
+      The time period for busting the cache. Note that depending on how long the job takes, should
+      be a factor into how often to bust. We don't want to do it too often or too few times.
+    type: enum
+    default: "1-day"
+    enum: ["6-hours", "12-hours", "1-day", "1-week", "1-month", "3-month"]
+  include-branch-in-cache:
+    description: |
+      If set this will include the branch will be included in the cache. This means that caches
+      will not be shared across branches. To create a cache that is only restored from the base
+      branch set trust-base-branch-cache-only.
+    type: boolean
+    default: true
+  trust-base-branch-cache-only:
+    description: |
+      If set this will restore cache only from master and when saving on non master branches will
+      use a common key. This is useful when using the cache for things like linting when only a
+      cache created in master is trusted.
+    type: boolean
+    default: true
+  base-branch:
+    description: |
+      The base branch for the repo. This is usually master or main.
+    type: string
+    default: master
+  save-cache-directory-1:
+    description: Path 1 to save in cache
+    type: string
+    default: /tmp/swissknife/cache/dir1
+  save-cache-directory-2:
+    description: Path 2 to save in cache
+    type: string
+    default: /tmp/swissknife/cache/dir2
+  save-cache-directory-3:
+    description: Path 3 to save in cache
+    type: string
+    default: /tmp/swissknife/cache/dir3
+
+steps:
+  - run:
+      name: Swissknife - Generate cache key
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+
+        time_period_secs=""
+
+        case "<< parameters.ttl-period >>" in
+          6-hours)
+            time_period_secs=21600
+            ;;
+
+          12-hours)
+            time_period_secs=43200
+            ;;
+
+          1-day)
+            time_period_secs=86400
+            ;;
+
+          1-week)
+            time_period_secs=604800
+            ;;
+
+          1-month)
+            time_period_secs=2592000
+            ;;
+
+          3-months)
+            time_period_secs=7776000
+            ;;
+
+          *)
+            echo "unknown time period";
+            exit 1;
+        esac
+
+        current_time=$(date +%s)
+        time_period_for_cache=$(($current_time/$time_period_secs))
+
+        mkdir -p /tmp/swissknife
+        rm -rf /tmp/swissknife/restore_time_cache_key
+        rm -rf /tmp/swissknife/save_time_cache_key
+
+        echo "$time_period_for_cache" > /tmp/swissknife/save_time_cache_key
+        echo "$time_period_for_cache" > /tmp/swissknife/restore_time_cache_key
+
+        save_branch_key=""
+        restore_branch_key=""
+        if [[ "<< parameters.include-branch-in-cache >>" == "true" ]]; then
+          if [[ "<< parameters.trust-base-branch-cache-only >>" == "true" ]]; then
+            restore_branch_key=<< parameters.base-branch >>
+
+            if [[ "$CIRCLE_BRANCH" =~ "<< parameters.base-branch >>" ]]; then
+              save_branch_key=<< parameters.base-branch >>
+            else
+              save_branch_key=notbasebranch
+            fi
+          else
+            save_branch_key=$CIRCLE_BRANCH
+            restore_branch_key=$CIRCLE_BRANCH
+          fi
+        fi
+
+        echo "$save_branch_key" >> /tmp/swissknife/save_time_cache_key
+        echo "$restore_branch_key" >> /tmp/swissknife/restore_time_cache_key
+
+        echo "Save cache key"
+        cat /tmp/swissknife/save_time_cache_key
+        echo "--------------"
+        echo "Restore cache key"
+        cat /tmp/swissknife/restore_time_cache_key
+  - when:
+      condition:
+        equal: [restore, << parameters.type >>]
+      steps:
+        - restore_cache:
+            keys:
+              - << parameters.cache-key-prefix >>-{{ checksum "/tmp/swissknife/restore_time_cache_key" }}
+  - when:
+      condition:
+        equal: [save, << parameters.type >>]
+      steps:
+        - save_cache:
+            key: << parameters.cache-key-prefix >>-{{ checksum "/tmp/swissknife/save_time_cache_key" }}
+            paths:
+              - << parameters.save-cache-directory-1 >>
+              - << parameters.save-cache-directory-2 >>
+              - << parameters.save-cache-directory-3 >>

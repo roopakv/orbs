@@ -74,7 +74,7 @@ steps:
         }
 
         get_num_running_workflows() {
-          running_job_prefix=https://circleci.com/api/v1.1/project/$slug";
+          running_job_prefix="https://circleci.com/api/v1.1/project/$slug";
           running_jobs_suffix="?circle-token=${CIRCLE_TOKEN}&filter=running&limit=100";
           running_jobs_branch="";
           if [[ "$branch_to_consider" != "all" ]]; then

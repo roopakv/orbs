@@ -5,7 +5,7 @@ description: |
 
 parameters:
   branch-to-consider:
-    description: The branch on which we will wait for workflows
+    description: The branch on which we will wait for workflows. If set to "all" this will wait across all branches
     type: string
     default: master
   max-wait-time:
@@ -74,7 +74,13 @@ steps:
         }
 
         get_num_running_workflows() {
-          running_jobs_url="https://circleci.com/api/v1.1/project/$slug/tree/$branch_to_consider?circle-token=${CIRCLE_TOKEN}&filter=running"
+          running_job_prefix=https://circleci.com/api/v1.1/project/$slug";
+          running_jobs_suffix="?circle-token=${CIRCLE_TOKEN}&filter=running&limit=100";
+          running_jobs_branch="";
+          if [[ "$branch_to_consider" != "all" ]]; then
+            running_jobs_branch="/tree/$branch_to_consider";
+          fi
+          running_jobs_url="${running_job_prefix}${running_jobs_branch}${running_jobs_suffix}"
           curl -f -s $running_jobs_url > /tmp/swissknife/running_jobs.json
           total_workflows_running=$(jq --arg curworkflow "$CIRCLE_WORKFLOW_ID" '[unique_by(.workflows.workflow_id) | .[] | select(.workflows.workflow_name|test("<< parameters.workflow-name >>")) | select(.workflows.workflow_id|test($curworkflow)|not) ] | length' /tmp/swissknife/running_jobs.json)
           # If no other workflows are running, we're good. just return

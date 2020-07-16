@@ -18,6 +18,13 @@ parameters:
     default: true
     description: |
       Will install the circle cli for you. If false you will need to install it. Needs sudo access.
+  circle-cli-version:
+    type: string
+    default: latest
+    description: |
+      Whether to install the latest version of the CLI. you can specify a specific version you 
+      want to install as well. Remember not to include the "v". An example version would be 
+      "0.1.8764". All releases can be found here: https://github.com/CircleCI-Public/circleci-cli/releases
   push-up-to-origin:
     description: |
       If there is a difference push up the built config to the current branch on origin.
@@ -45,6 +52,9 @@ steps:
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
 
         if [[ "<< parameters.install-circle-cli >>" == "true" ]]; then
+          if [[ "<< parameters.circle-cli-version >>" != "latest" ]]; then
+            export VERSION="<< parameters.circle-cli-version >>";
+          if 
           curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
         else
           circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or chaneg swissknife params"; exit 1; }

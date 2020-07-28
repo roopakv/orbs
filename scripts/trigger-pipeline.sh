@@ -11,7 +11,7 @@ fi
 
 mkdir -p /tmp/swissknife/
 
-cat \<\<EOF > /tmp/swissknife/trigger_pipeline.sh
+cat > /tmp/swissknife/trigger_pipeline2.sh \<\<'EOF'
   #!/bin/bash -x
   echo "----------------------------------------"
   echo "Triggering Pipeline"

@@ -10,6 +10,8 @@ if [[ "$CIRCLE_TOKEN" == "" ]]; then
 fi
 
 sudo mkdir -p /var/swissknife/
+sudo chown -R $USER /var/swissknife
+sudo chmod -R 755  /var/swissknife
 
 cat \<\<EOF > /var/swissknife/trigger_pipeline.sh
   #!/bin/bash -x

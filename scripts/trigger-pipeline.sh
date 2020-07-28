@@ -21,6 +21,8 @@ cat \<\<EOF > /var/swissknife/trigger_pipeline.sh
   export reponame="$3";
   export branch="$4";
   export params="$5";
+  echo "params is"
+  echo $params
 
   trigger_workflow() {
     curl --silent -X POST \

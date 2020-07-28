@@ -9,7 +9,7 @@ if [[ "$CIRCLE_TOKEN" == "" ]]; then
   exit 1;
 fi
 
-sudo mkdir -p /tmp/swissknife/
+mkdir -p /tmp/swissknife/
 
 cat \<\<EOF > /tmp/swissknife/trigger_pipeline.sh
   #!/bin/bash -x

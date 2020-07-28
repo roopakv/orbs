@@ -29,4 +29,4 @@ parameters:
     type: boolean
     default: false
 steps:
-  - run: << include(../scripts/trigger-pipeline.sh) >>
+  - run: << include(../scripts/trigger-pipeline.sh)

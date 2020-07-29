@@ -9,9 +9,9 @@ if [[ "$CIRCLE_TOKEN" == "" ]]; then
   exit 1;
 fi
 
-mkdir -p /var/swissknife/
+mkdir -p /tmp/swissknife/
 
-cat \<\<EOF > /var/swissknife/trigger_pipeline.sh
+cat > /tmp/swissknife/trigger_pipeline.sh \<<'EOF'
   #!/bin/bash -x
   echo "----------------------------------------"
   echo "Triggering Pipeline"
@@ -29,7 +29,7 @@ cat \<\<EOF > /var/swissknife/trigger_pipeline.sh
       -H 'Content-Type: application/json' \
       -d '{
         "branch": "'$branch'",
-        "parameters": '$params'
+        "parameters": '"$params"'
       }'
   }
 
@@ -39,8 +39,8 @@ cat \<\<EOF > /var/swissknife/trigger_pipeline.sh
   echo "----------------------------------------"
 EOF
 
-chmod +x /var/swissknife/trigger_pipeline.sh
+chmod +x /tmp/swissknife/trigger_pipeline.sh
 
 if [[ "<< parameters.install-skip-trigger >>" == "false" ]]; then
-  /var/swissknife/trigger_pipeline.sh << parameters.vcs-type >> $<< parameters.user >> $<< parameters.repo-name >> $<< parameters.branch >> '<< parameters.custom-parameters >>'
+  /tmp/swissknife/trigger_pipeline.sh << parameters.vcs-type >> $<< parameters.user >> $<< parameters.repo-name >> $<< parameters.branch >> '<< parameters.custom-parameters >>'
 fi

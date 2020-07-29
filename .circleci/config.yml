@@ -1,10 +1,38 @@
 version: 2.1
 
+parameters:
+  run-integration-tests:
+    type: boolean
+    default: false
+  dev-orb-version:
+    type: string
+    default: "dev:alpha"
+
 orbs:
-  orb-tools: circleci/orb-tools@8.27.3
-  swissknife: roopakv/swissknife@dev:alpha
+  orb-tools: circleci/orb-tools@9.2.1
+  swissknife: roopakv/swissknife@<<pipeline.parameters.dev-orb-version>>
+  cli: circleci/circleci-cli@0.1.8
 
 jobs:
+  # TODO remove after https://github.com/CircleCI-Public/orb-tools-orb/pull/95/files
+  pack:
+    executor: cli/default
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - run:
+          name: pack
+          command: |
+            circleci orb pack --skip-update-check src > orb.yml
+      - orb-tools/validate:
+          orb-path: orb.yml
+      - persist_to_workspace:
+          paths:
+            - orb.yml
+          root: .
+      - store_artifacts:
+          path: orb.yml
+
   test_run_if_modified:
     executor: orb-tools/ubuntu
     working_directory: /home/circleci/orbs
@@ -74,40 +102,44 @@ jobs:
                       command: |
                         circleci config pack src > LICENCE
 
+  test_trigger_pipeline:
+    executor: orb-tools/ubuntu
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - swissknife/trigger-pipeline:
+          install-skip-trigger: true
+      - run:
+          command: |
+            cat /tmp/swissknife/trigger_pipeline.sh
+
+            export PARAMS='{"a": "b"}'
+
+            /tmp/swissknife/trigger_pipeline.sh github roopakv orbs $CIRLE_BRANCH $PARAMS
+
 workflows:
   lint-pack-validate-publish-dev:
+    unless: << pipeline.parameters.run-integration-tests >>
     jobs:
       - orb-tools/lint
 
-      - orb-tools/pack:
+      - pack:
           requires: [orb-tools/lint]
 
       - orb-tools/publish-dev:
           orb-name: roopakv/swissknife
-          requires: [orb-tools/pack]
+          requires: [pack]
 
-      - orb-tools/trigger-integration-workflow:
+      - orb-tools/trigger-integration-tests-workflow:
           name: trigger-integration-dev
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
           requires: [orb-tools/publish-dev]
-          filters:
-            branches:
-              ignore: master
-
-      - orb-tools/trigger-integration-workflow:
-          name: trigger-integration-master
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          tag: master
-          requires: [orb-tools/publish-dev]
-          filters:
-            branches:
-              only: master
 
   build:
     jobs:
       - test_run_if_modified
       - test_run_on_branch
       - test_fail_if_dirty
+      # - test_trigger_pipeline
 
   integration_tests-prod_deploy:
     jobs:
@@ -149,49 +181,20 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /master-m.*/
+              only: /.*-release.*/
 
       # patch, minor, or major publishing
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-patch
+      - orb-tools/dev-promote-prod-from-git-tag:
+          name: promote orb
           orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
+          add-pr-comment: false
           requires:
             - publish-approval
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /master-patch.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-minor
-          release: minor
-          orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          requires:
-            - publish-approval
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-minor.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-major
-          release: major
-          orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          requires:
-            - publish-approval
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-major.*/
+              only: /.*-release.*/
 
 executors:
   nodeimg:

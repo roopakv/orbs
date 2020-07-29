@@ -1,8 +1,16 @@
 version: 2.1
 
+parameters:
+  run-integration-tests:
+    type: boolean
+    default: false
+  dev-orb-version:
+    type: string
+    default: "dev:alpha"
+
 orbs:
   orb-tools: circleci/orb-tools@9.2.1
-  swissknife: roopakv/swissknife@dev:alpha
+  swissknife: roopakv/swissknife@<<pipeline.parameters.dev-orb-version>>
 
 jobs:
   test_run_if_modified:
@@ -91,6 +99,7 @@ jobs:
 
 workflows:
   lint-pack-validate-publish-dev:
+    unless: << pipeline.parameters.run-integration-tests >>
     jobs:
       - orb-tools/lint
 
@@ -101,22 +110,9 @@ workflows:
           orb-name: roopakv/swissknife
           requires: [orb-tools/pack]
 
-      - orb-tools/trigger-integration-workflow:
+      - orb-tools/trigger-integration-tests-workflow:
           name: trigger-integration-dev
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
           requires: [orb-tools/publish-dev]
-          filters:
-            branches:
-              ignore: master
-
-      - orb-tools/trigger-integration-workflow:
-          name: trigger-integration-master
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          tag: master
-          requires: [orb-tools/publish-dev]
-          filters:
-            branches:
-              only: master
 
   build:
     jobs:
@@ -165,49 +161,20 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /master-m.*/
+              only: /.*-release.*/
 
       # patch, minor, or major publishing
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-patch
+      - orb-tools/dev-promote-prod-from-git-tag:
+          name: promote orb
           orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
+          add-pr-comment: false
           requires:
             - publish-approval
           filters:
             branches:
               ignore: /.*/
             tags:
-              only: /master-patch.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-minor
-          release: minor
-          orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          requires:
-            - publish-approval
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-minor.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-major
-          release: major
-          orb-name: roopakv/swissknife
-          cleanup-tags: true
-          ssh-fingerprints: 39:1e:f6:7e:f0:aa:db:10:4e:84:30:6d:9c:dc:90:9e
-          requires:
-            - publish-approval
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-major.*/
+              only: /.*-release.*/
 
 executors:
   nodeimg:

@@ -123,7 +123,7 @@ workflows:
       - test_run_if_modified
       - test_run_on_branch
       - test_fail_if_dirty
-      - test_trigger_pipeline
+      # - test_trigger_pipeline
 
   integration_tests-prod_deploy:
     jobs:

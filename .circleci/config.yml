@@ -11,11 +11,12 @@ parameters:
 orbs:
   orb-tools: circleci/orb-tools@9.2.1
   swissknife: roopakv/swissknife@<<pipeline.parameters.dev-orb-version>>
+  cli: circleci/circleci-cli@0.1.8
 
 jobs:
   # TODO remove after https://github.com/CircleCI-Public/orb-tools-orb/pull/95/files
   pack:
-    executor: cimg/base:edge
+    executor: cli/default
     working_directory: /home/circleci/orbs
     steps:
       - checkout

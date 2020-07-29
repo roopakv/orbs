@@ -13,6 +13,25 @@ orbs:
   swissknife: roopakv/swissknife@<<pipeline.parameters.dev-orb-version>>
 
 jobs:
+  # TODO remove after https://github.com/CircleCI-Public/orb-tools-orb/pull/95/files
+  pack:
+    executor: orb-tools/ubuntu
+    working_directory: /home/circleci/orbs
+    steps:
+      - checkout
+      - run:
+          name: pack
+          command: |
+            circleci orb pack --skip-update-check src > orb.yml
+      - orb-tools/validate:
+          orb-path: orb.yml
+      - persist_to_workspace:
+          paths:
+            - orb.yml
+          root: .
+      - store_artifacts:
+          path: orb.yml
+
   test_run_if_modified:
     executor: orb-tools/ubuntu
     working_directory: /home/circleci/orbs
@@ -103,12 +122,12 @@ workflows:
     jobs:
       - orb-tools/lint
 
-      - orb-tools/pack:
+      - pack:
           requires: [orb-tools/lint]
 
       - orb-tools/publish-dev:
           orb-name: roopakv/swissknife
-          requires: [orb-tools/pack]
+          requires: [pack]
 
       - orb-tools/trigger-integration-tests-workflow:
           name: trigger-integration-dev

@@ -83,11 +83,11 @@ jobs:
           install-skip-trigger: true
       - run:
           command: |
-            cat /var/swissknife/trigger_pieline.sh
+            cat /var/swissknife/trigger_pipeline.sh
 
             export PARAMS='{"a": "b"}'
 
-            /var/swissknife/trigger_pieline.sh github roopakv orbs $CIRLE_BRANCH $PARAMS
+            /var/swissknife/trigger_pipeline.sh github roopakv orbs $CIRLE_BRANCH $PARAMS
 
 workflows:
   lint-pack-validate-publish-dev:

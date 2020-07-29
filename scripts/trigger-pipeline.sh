@@ -31,7 +31,7 @@ cat > /tmp/swissknife/trigger_pipeline.sh \<<'EOF'
       -H 'Content-Type: application/json' \
       -d '{
         "branch": "'$branch'",
-        "parameters": '$params'
+        "parameters": '"$params"'
       }'
   }
 

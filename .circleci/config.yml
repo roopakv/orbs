@@ -115,7 +115,7 @@ jobs:
 
             export PARAMS='{"a": "b"}'
 
-            /tmp/swissknife/trigger_pipeline.sh github roopakv orbs $CIRLE_BRANCH "$PARAMS"
+            /tmp/swissknife/trigger_pipeline.sh github roopakv orbs "$CIRLE_BRANCH" "$PARAMS"
 
 workflows:
   lint-pack-validate-publish-dev:

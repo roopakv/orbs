@@ -139,7 +139,7 @@ workflows:
       - test_run_if_modified
       - test_run_on_branch
       - test_fail_if_dirty
-      # - test_trigger_pipeline
+      - test_trigger_pipeline
 
   integration_tests-prod_deploy:
     jobs:
@@ -163,8 +163,7 @@ workflows:
               only:
                 - /integration-.*/
                 - /master-.*/
-
-       # triggered by non-master branch commits
+        # triggered by non-master branch commits
       - test_fail_if_dirty:
           filters:
             branches:
@@ -173,7 +172,6 @@ workflows:
               only:
                 - /integration-.*/
                 - /master-.*/
-
 
       - publish-approval:
           type: approval

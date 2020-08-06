@@ -11,7 +11,7 @@ fi
 
 mkdir -p /tmp/swissknife/
 
-cat > /tmp/swissknife/trigger_pipeline.sh \<<'EOF'
+cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
   #!/bin/bash -x
   echo "----------------------------------------"
   echo "Triggering Pipeline"
@@ -41,6 +41,10 @@ EOF
 
 chmod +x /tmp/swissknife/trigger_pipeline.sh
 
-if [[ "<< parameters.install-skip-trigger >>" == "false" ]]; then
-  /tmp/swissknife/trigger_pipeline.sh << parameters.vcs-type >> $<< parameters.user >> $<< parameters.repo-name >> $<< parameters.branch >> '<< parameters.custom-parameters >>'
+PARAM_USER=$(printf '%s\n' "${!PARAM_USER_ENV_VAR}")
+PARAM_REPO=$(printf '%s\n' "${!PARAM_REPO_ENV_VAR}")
+PARAM_BRANCH=$(printf '%s\n' "${!PARAM_BRANCH_ENV_VAR}")
+
+if [[ "$SKIP_TRIGGER" == "false" ]]; then
+  /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" "$PARAM_BRANCH" "$CUSTOM_PARAMS"
 fi

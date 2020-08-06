@@ -69,9 +69,9 @@ steps:
 
           cd << parameters.save-to-directory >>
           if [[ "<< parameters.file-name >>" == "NA" ]]; then
-            curl -H "Circle-Token: $CIRCLE_TOKEN" --remote-name $REQUIRED_ARTIFACT_URL
+            curl -L -H "Circle-Token: $CIRCLE_TOKEN" --remote-name $REQUIRED_ARTIFACT_URL
           else
-            curl -H "Circle-Token: $CIRCLE_TOKEN" -o << parameters.file-name >> $REQUIRED_ARTIFACT_URL
+            curl -L -H "Circle-Token: $CIRCLE_TOKEN" -o << parameters.file-name >> $REQUIRED_ARTIFACT_URL
           fi
           echo "File downloaded to << parameters.save-to-directory >>"
         }

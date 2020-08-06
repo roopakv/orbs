@@ -31,4 +31,11 @@ parameters:
 steps:
   - run:
       name: Trigger pipeline
+      environment:
+        SKIP_TRIGGER: << parameters.install-skip-trigger >>
+        VCS_TYPE: << parameters.vcs-type >>
+        PARAM_USER_ENV_VAR: << parameters.user >>
+        PARAM_REPO_ENV_VAR: << parameters.repo-name >>
+        PARAM_BRANCH_ENV_VAR: << parameters.branch >>
+        CUSTOM_PARAMS: << parameters.custom-parameters >>
       command: << include(../scripts/trigger-pipeline.sh) >>

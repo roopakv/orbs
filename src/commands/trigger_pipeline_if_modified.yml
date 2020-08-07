@@ -63,7 +63,7 @@ steps:
         }
 
         if [ "$CIRCLE_BRANCH" == "<< parameters.always-trigger-on-branch >>" ]; then
-          echo "Should always run on << parameters.always-trigger-on-branch >>. Trigerring"
+          echo "Should always run on << parameters.always-trigger-on-branch >>. Triggering"
           trigger_workflow
           exit 0;
         fi
@@ -82,6 +82,6 @@ steps:
           echo "Files not modified. exitting and continuing with other steps"
           exit 0;
         else
-          echo "Files modified, trigerring workflow."
+          echo "Files modified, triggering workflow."
           trigger_workflow
         fi

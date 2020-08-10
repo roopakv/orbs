@@ -10,9 +10,9 @@ fi
 
 mkdir -p /tmp/swissknife
 
-FINAL_WORKFLOW_ID="$CIRCLE_WORKFLOW_ID";
-if [[ "$WORKFLOW_ID" != "this "]]; then
-  FINAL_WORKFLOW_ID="$WORKFLOW_ID";
+FINAL_WORKFLOW_ID="$CIRCLE_WORKFLOW_ID"
+if [[ "$WORKFLOW_ID" != "this" ]]; then
+  FINAL_WORKFLOW_ID="$WORKFLOW_ID"
 fi
 
 JOB_NUM=""

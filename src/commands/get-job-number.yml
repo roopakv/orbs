@@ -1,0 +1,23 @@
+description: |
+  This command gets the job number given a name. If no workflow is specified, it uses the current
+  workflow, otherwise it uses the specifed workflow.
+  This can be used to retrieve artifacts from upstream jobs. The job number is saved to the bash
+  env with name SK_JOB_NUM
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
+
+parameters:
+  workflow-id:
+    description: The workflow id to find the job in. Uses current worflow if no value passed in.
+    type: string
+    default: "this"
+  job-name:
+    description: The name of the job to find the id of.
+    type: string
+
+steps:
+  - run:
+      name: Swissknife - job number
+      environment:
+        WORKFLOW_ID: << parameters.workflow-id >>
+        JOB_NAME: << parameters.job-name >>
+      command: << include(../scripts/get-job-number.sh) >>

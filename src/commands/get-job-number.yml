@@ -20,4 +20,4 @@ steps:
       environment:
         WORKFLOW_ID: << parameters.workflow-id >>
         JOB_NAME: << parameters.job-name >>
-      command: << include(../scripts/get-job-number.sh) >>
+      command: \<< include(../scripts/get-job-number.sh) >>

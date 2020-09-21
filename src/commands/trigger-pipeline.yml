@@ -38,4 +38,4 @@ steps:
         PARAM_REPO_ENV_VAR: << parameters.repo-name >>
         PARAM_BRANCH_ENV_VAR: << parameters.branch >>
         CUSTOM_PARAMS: << parameters.custom-parameters >>
-      command: \<< include(../scripts/trigger-pipeline.sh) >>
+      command: << include(../scripts/trigger-pipeline.sh) >>

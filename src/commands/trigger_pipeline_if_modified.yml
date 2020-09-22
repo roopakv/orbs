@@ -52,6 +52,10 @@ steps:
         fi
 
         trigger_workflow() {
+          if [[ "$CIRCLE_PR_NUMBER" != "" ]]; then
+            CIRCLE_BRANCH="pull/$CIRCLE_PR_NUMBER/head";
+          fi
+
           curl --silent -X POST \
             "https://circleci.com/api/v2/project/<< parameters.vcs-type >>/$<< parameters.user >>/$<< parameters.repo-name >>/pipeline?circle-token=${CIRCLE_TOKEN}" \
             -H 'Accept: */*' \

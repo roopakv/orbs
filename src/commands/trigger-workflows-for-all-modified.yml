@@ -176,7 +176,9 @@ steps:
           custom_params=`cat /tmp/swissknife/workflow_params.json`
           echo $custom_params
 
-          if [ "$CI_PULL_REQUEST" != "" ]; then CIRCLE_BRANCH=$CIRCLE_BRANCH/head; fi
+          if [[ "$CIRCLE_PR_NUMBER" != "" ]]; then
+            CIRCLE_BRANCH="pull/$CIRCLE_PR_NUMBER/head";
+          fi
 
           curl --silent -X POST \
             "https://circleci.com/api/v2/project/<< parameters.vcs-type >>/$<< parameters.user >>/$<< parameters.repo-name >>/pipeline?circle-token=${CIRCLE_TOKEN}" \

@@ -48,13 +48,13 @@ steps:
 
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} '<< parameters.pattern >>')
           <<# parameters.use-divergence-point >>
-          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} '<< parameters.pattern >>')
           <</ parameters.use-divergence-point >>
           <<# parameters.check-last-commit-on-base-branch >>
           if [[ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]]; then
-            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep -i -E '<< parameters.pattern >>')
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} '<< parameters.pattern >>')
           fi
           <</ parameters.check-last-commit-on-base-branch >>
         }

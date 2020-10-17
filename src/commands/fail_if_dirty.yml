@@ -41,7 +41,7 @@ steps:
 
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git status -s | grep -i <<# parameters.invert-pattern >> -v <</ parameters.invert-pattern >> -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git status -s | grep <<# parameters.invert-pattern >> -v <</ parameters.invert-pattern >> ${SWISSKNIFE_GREP_FLAGS:--i -E} '<< parameters.pattern >>')
         }
 
         setcommit || true

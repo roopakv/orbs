@@ -39,9 +39,10 @@ steps:
         fi
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
 
+        FINAL_GREP_FLAGS=${SWISSKNIFE_GREP_FLAGS:--i -E}
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git status -s | grep <<# parameters.invert-pattern >> -v <</ parameters.invert-pattern >> ${SWISSKNIFE_GREP_FLAGS:--i -E} '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git status -s | grep <<# parameters.invert-pattern >> -v <</ parameters.invert-pattern >> $FINAL_GREP_FLAGS '<< parameters.pattern >>')
         }
 
         setcommit || true

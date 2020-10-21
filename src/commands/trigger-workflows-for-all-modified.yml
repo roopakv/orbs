@@ -116,6 +116,7 @@ steps:
           exit 1;
         fi
 
+        FINAL_GREP_FLAGS=${SWISSKNIFE_GREP_FLAGS:--i -E}
         SEARCH_MODE=<< parameters.search-mode >>
         echo "The search mode is $SEARCH_MODE"
 
@@ -140,9 +141,9 @@ steps:
         get_modified_files_for_regex() {
           FILES_MODIFIED=""
           if [[ "$SEARCH_MODE" == "grep" ]]; then
-            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} $1)
+            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep $FINAL_GREP_FLAGS $1)
             <<# parameters.use-divergence-point >>
-            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} $1)
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep $FINAL_GREP_FLAGS $1)
             <</ parameters.use-divergence-point >>
           else
             FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | perl -nle "print if m{$1}")
@@ -154,7 +155,7 @@ steps:
 
         get_modified_files_for_commit_regex() {
           if [[ "$SEARCH_MODE" == "grep" ]]; then
-            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep ${SWISSKNIFE_GREP_FLAGS:--i -E} $1)
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep $FINAL_GREP_FLAGS $1)
           else
             FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | perl -nle "print if m{$1}")
           fi

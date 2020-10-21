@@ -45,11 +45,12 @@ steps:
           exit 0;
         fi
 
+        FINAL_GREP_FLAGS=${SWISSKNIFE_GREP_FLAGS:--i -E}
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E -v '<< parameters.exclusion-pattern >>')
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep $FINAL_GREP_FLAGS -v '<< parameters.exclusion-pattern >>')
           <<# parameters.use-divergence-point >>
-          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E -v '<< parameters.exclusion-pattern >>')
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep $FINAL_GREP_FLAGS -v '<< parameters.exclusion-pattern >>')
           <</ parameters.use-divergence-point >>
         }
 

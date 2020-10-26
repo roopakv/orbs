@@ -51,6 +51,8 @@ steps:
           exit 1;
         fi
 
+        FINAL_GREP_FLAGS=${SWISSKNIFE_GREP_FLAGS:--i -E}
+
         trigger_workflow() {
           if [[ "$CIRCLE_PR_NUMBER" != "" ]]; then
             CIRCLE_BRANCH="pull/$CIRCLE_PR_NUMBER/head";
@@ -74,9 +76,9 @@ steps:
 
         FILES_MODIFIED=""
         setcommit () {
-          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep $FINAL_GREP_FLAGS '<< parameters.pattern >>')
           <<# parameters.use-divergence-point >>
-          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep -i -E '<< parameters.pattern >>')
+          FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep $FINAL_GREP_FLAGS '<< parameters.pattern >>')
           <</ parameters.use-divergence-point >>
         }
 

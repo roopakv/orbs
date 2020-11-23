@@ -10,7 +10,7 @@ parameters:
 
 orbs:
   orb-tools: circleci/orb-tools@9.2.1
-  swissknife: roopakv/swissknife@<<pipeline.parameters.dev-orb-version>>
+  swissknife: wiz-sec/swissknife@<<pipeline.parameters.dev-orb-version>>
   cli: circleci/circleci-cli@0.1.8
 
 jobs:

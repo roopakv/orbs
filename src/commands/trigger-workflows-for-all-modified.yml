@@ -205,6 +205,10 @@ steps:
               "branch": "'$CIRCLE_BRANCH'",
               "parameters": '$custom_params'
             }' | tee /tmp/swissknife/triggered_workflow.json
+
+          if [[ "<< parameters.wait-for-workflows >>" == "true" ]]; then
+            wait_for_workflow
+          fi
         }
 
         generate_branch_params() {
@@ -302,6 +306,4 @@ steps:
         echo "Non base branch";
         generate_branch_params
         trigger_workflow
-        if [[ "<< parameters.wait-for-workflows >>" == "true" ]]; then
-          wait_for_workflow
-        fi
+

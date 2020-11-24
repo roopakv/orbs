@@ -101,6 +101,22 @@ parameters:
       You can see an example of this in the example repo above.
     type: boolean
     default: false
+  sleep-time-between-checks:
+    description: How long to sleep between checks if waiting for workflows to complete.
+    type: string
+    default: "30"
+  wait-for-workflows:
+    description: |
+      Should we wait for the triggered workflow to complete and exit accordingly 
+      (all success = exit code 0, anyting else = exit code 1)
+    type: boolean
+    default: false
+  modified-params-filename:
+    description: |
+      a filename that will include a line for each param_name that was defined in code-param-name-map 
+      whose files were modified (i.e the regex was matched)
+    type: string
+    default: ""
 steps:
   - run:
       name: Swissknife - Trigger workflows for all modified
@@ -188,10 +204,12 @@ steps:
             -d '{
               "branch": "'$CIRCLE_BRANCH'",
               "parameters": '$custom_params'
-            }'
+            }' | tee /tmp/swissknife/triggered_workflow.json
         }
 
         generate_branch_params() {
+          modified_filename="<< parameters.modified-params-filename >>"
+          [ -n "${modified_filename}" ] && rm -f "${modified_filename}"
           input_map=`echo '<< parameters.code-param-name-map >>'`
           echo "$input_map" | jq -c '.[]' |
           while IFS=$"\n" read -r mod; do
@@ -216,6 +234,7 @@ steps:
                 echo "appending param to list of inputs"
                 echo ""
                 append_to_params $param_name
+                [ -n "${modified_filename}" ] && echo "$param_name" >> "${modified_filename}"
 
                 echo "Current Params:"
                 cat /tmp/swissknife/workflow_params.json
@@ -241,6 +260,35 @@ steps:
           done
         }
 
+        wait_for_workflow() {
+          workflow_id=$(jq -r .id /tmp/swissknife/triggered_workflow.json)
+          echo ""
+          echo "Waiting for workflow: ${workflow_id} to complete"
+
+          while true; do
+            # TODO: Need to support pagination somehow
+            workflow_status=/tmp/swissknife/workflow_status.json
+            curl --silent "https://circleci.com/api/v2/pipeline/${workflow_id}/workflow?circle-token=${CIRCLE_TOKEN}" > ${workflow_status}
+
+            total=$(jq '.items | length' ${workflow_status})
+            running=$(jq '.items | map(select(.status == "running")) | length' ${workflow_status})
+            success=$(jq '.items | map(select(.status == "success")) | length' ${workflow_status})
+            echo "total: ${total}, running: ${running}, success: ${success}"
+            if (( $total == 0 || $running > 0 )); then
+              echo "Going to sleep for << parameters.sleep-time-between-checks >>"
+              sleep << parameters.sleep-time-between-checks >>
+            elif (( $total == $success )); then
+              echo "Great success"
+              exit 0
+            else
+              cat ${workflow_status}
+              echo ""
+              echo "The above jobs have at least one non-success status, this will now fail"
+              exit 1
+            fi
+          done
+        }
+
         if [ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]; then
           if [[ "run_all" == "<< parameters.run-mode-for-base-branch >>" ]]; then
             generate_all_params
@@ -254,3 +302,6 @@ steps:
         echo "Non base branch";
         generate_branch_params
         trigger_workflow
+        if [[ "<< parameters.wait-for-workflows >>" == "true" ]]; then
+          wait_for_workflow
+        fi

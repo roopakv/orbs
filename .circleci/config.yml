@@ -47,11 +47,11 @@ jobs:
                   exit 0;
       - swissknife/run_if_modified:
           pattern: neverexists
-          always-run-on-branch: roopakv/always_run
+          always-run-on-branch: wiz-sec/always_run
           steps-to-run:
             - run:
                 command: |
-                  echo "this will always in roopakv/always_run";
+                  echo "this will always in wiz-sec/always_run";
                   exit 1;
       - swissknife/run_if_modified:
           pattern: neverexists
@@ -96,7 +96,7 @@ jobs:
           custom-error-message: Something is wrong, very very wrong
           steps-to-run:
             - swissknife/run_on_branch:
-                branch-pattern: roopakv
+                branch-pattern: wiz-sec
                 steps-to-run:
                   - run:
                       command: |
@@ -115,7 +115,7 @@ jobs:
 
             export PARAMS='{"a": "b"}'
 
-            /tmp/swissknife/trigger_pipeline.sh github roopakv orbs $CIRLE_BRANCH $PARAMS
+            /tmp/swissknife/trigger_pipeline.sh github wiz-sec orbs $CIRLE_BRANCH $PARAMS
 
 workflows:
   lint-pack-validate-publish-dev:
@@ -127,7 +127,7 @@ workflows:
           requires: [orb-tools/lint]
 
       - orb-tools/publish-dev:
-          orb-name: roopakv/swissknife
+          orb-name: wiz-sec/swissknife
           requires: [pack]
 
       - orb-tools/trigger-integration-tests-workflow:
@@ -186,7 +186,7 @@ workflows:
       # patch, minor, or major publishing
       - orb-tools/dev-promote-prod-from-git-tag:
           name: promote orb
-          orb-name: roopakv/swissknife
+          orb-name: wiz-sec/swissknife
           add-pr-comment: false
           requires:
             - publish-approval

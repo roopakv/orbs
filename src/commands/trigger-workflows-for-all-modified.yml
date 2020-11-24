@@ -107,13 +107,13 @@ parameters:
     default: "30"
   wait-for-workflows:
     description: |
-      Should we wait for the triggered workflow to complete and exit accordingly 
+      Should we wait for the triggered workflow to complete and exit accordingly
       (all success = exit code 0, anyting else = exit code 1)
     type: boolean
     default: false
   modified-params-filename:
     description: |
-      a filename that will include a line for each param_name that was defined in code-param-name-map 
+      a filename that will include a line for each param_name that was defined in code-param-name-map
       whose files were modified (i.e the regex was matched)
     type: string
     default: ""

@@ -276,7 +276,7 @@ steps:
             while true; do
               # pagination
               last_workflow_status=/tmp/swissknife/last_workflow_status.json
-              curl --silent "https://circleci.com/api/v2/pipeline/${workflow_id}/workflow?circle-token=${CIRCLE_TOKEN}${page}" | tee ${last_workflow_status} | jq -r '.items[]' >> ${workflow_status}
+              curl --silent "https://circleci.com/api/v2/pipeline/${workflow_id}/workflow?circle-token=${CIRCLE_TOKEN}${page}" | tee ${last_workflow_status} | jq -r '.items[]?' >> ${workflow_status}
               page="&page-token=$(jq -cr '.next_page_token' ${last_workflow_status})"
               if (( $? )); then # the jq quits with error with next_page_token is null/missing
                 break

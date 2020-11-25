@@ -277,13 +277,12 @@ steps:
               # pagination
               last_workflow_status=/tmp/swissknife/last_workflow_status.json
               curl --silent "https://circleci.com/api/v2/pipeline/${workflow_id}/workflow?circle-token=${CIRCLE_TOKEN}${page}" | tee ${last_workflow_status} | jq -r '.items[]?' >> ${workflow_status}
-              if [ ! -s ${last_workflow_status} ]; then
+              next_page=$(jq -r '.next_page_token' ${last_workflow_status})
+              if [[ $next_page == "null" || $next_page == "" ]]; then
                 break
               fi
-              page="&page-token=$(jq -cr '.next_page_token' ${last_workflow_status})"
-              if (( $? )); then # the jq quits with error with next_page_token is null/missing
-                break
-              fi
+              page="&page-token=${next_page}"
+              cat ${last_workflow_status}
             done
 
             total=$(jq -s 'length' ${workflow_status})
@@ -299,9 +298,11 @@ steps:
             else
               cat ${workflow_status}
               echo ""
-              echo "The following jobs have at least one non-success status, this will now fail:"
+              echo "Unsuccessful jobs:"
+              echo "------------------"
               jq -r 'select(.status != "success") | .name + " (" + .status + "): https://app.circleci.com/pipelines/" + .project_slug + "/" + (.pipeline_number | tostring) + "/workflows/" + .id ' ${workflow_status}
-              echo "Bye!"
+              echo "------------------"
+              echo "I will now fail"
               exit 1
             fi
           done

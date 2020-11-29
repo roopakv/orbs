@@ -282,7 +282,6 @@ steps:
                 break
               fi
               page="&page-token=${next_page}"
-              cat ${last_workflow_status}
             done
 
             total=$(jq -s 'length' ${workflow_status})

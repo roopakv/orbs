@@ -171,9 +171,9 @@ steps:
 
         get_modified_files_for_commit_regex() {
           if [[ "$SEARCH_MODE" == "grep" ]]; then
-            FILES_MODIFIED=$(git diff --name-only HEAD HEAD^@ | grep $FINAL_GREP_FLAGS $1)
+            FILES_MODIFIED=$(git diff --name-only HEAD^@ | grep $FINAL_GREP_FLAGS $1)
           else
-            FILES_MODIFIED=$(git diff --name-only HEAD HEAD^@ | perl -nle "print if m{$1}")
+            FILES_MODIFIED=$(git diff --name-only HEAD^@ | perl -nle "print if m{$1}")
           fi
         }
 

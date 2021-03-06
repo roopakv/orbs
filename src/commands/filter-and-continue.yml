@@ -1,0 +1,181 @@
+description: |
+  This is the swissknife variation of path filtering described here.
+  https://github.com/CircleCI-Public/api-preview-docs/blob/path-filtering/docs/path-filtering.md#using-the-path-filtering-orb
+
+  This lets swissknife users continue without having to change their regexes and custom setup.
+
+parameters:
+  base-branch:
+    description: |
+      The base branch for the repo. Based on the parameter "run-mode-for-base-branch",
+      you can either run all workflows or only the workflows of code modified in the last
+      commit.
+    type: string
+    default: master
+  run-mode-for-base-branch:
+    description: |
+      The mechanism to use on the base branch. "run_all" simply runs all workflows on the base
+      branch (only the triggers passed into the map). "run_for_last_commit", looks at the code
+      modified in the last commit and Triggers a pipeline with all workflows according to that
+      commit. If your team uses only squash merges "run_for_last_commit" will work well.
+      Currently this command has not been tested for non squash merges to the base branch.
+    type: enum
+    enum: ["run_all", "run_for_last_commit"]
+    default: run_all
+  use-divergence-point:
+    description: |
+      Find the divergence from the branch passed above, rather than the current HEAD. This is helpful
+      in branches. If true it looks at all code modified since the divergence from abse branch (say master),
+      otherwise if false it only looks at the last commit.
+    type: boolean
+    default: true
+  code-param-name-map:
+    description: |
+      Circle CI doesnt yet accept list inputs, so we accept a json blob as input. It is
+      a list of objects each of which contain "regex" to test for modified files and
+      "param_name" which causes that workflow to be triggered. the param_name is always
+      triggered with value true. In the future as Circle CI works with comparing values
+      in when clauses other param values will be accepted.
+
+      i.e. [{"regex": "/path/to/servercode", "param_name": "run_server_workflow"}]
+    type: string
+  search-mode:
+    description: |
+      By default searching for file matches uses grep with the extended matcher. The other option
+      involves using perl. Perl supports more complicated regexes such as negative lookahead etc.
+      Note that perl mode only works if perl is installed.
+    type: enum
+    default: grep
+    enum: ["grep", "perl"]
+  config-path:
+    type: string
+    default: ".circleci/continue_config.yml"
+    description: >
+      The location of the config to continue the pipeline with.
+steps:
+  - run:
+      name: Swissknife - Set Parameters and continue
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No Circle CI agent. These are in all Circle CI containers"; exit 1; }
+        if [[ "$CIRCLE_TOKEN" == "" ]]; then
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          exit 1;
+        fi
+
+        FINAL_GREP_FLAGS=${SWISSKNIFE_GREP_FLAGS:--i -E}
+        SEARCH_MODE=<< parameters.search-mode >>
+        echo "The search mode is $SEARCH_MODE"
+
+        # Validate input JSON.
+        echo "Validating input JSON";
+        echo '<< parameters.code-param-name-map >>' | jq type || { echo "Invalid input map JSON"; exit 1; }
+
+        append_string_to_params() {
+          current_data=`cat /tmp/swissknife/workflow_params.json`
+          echo $current_data | jq --arg param $1 --arg param2 $2 '. + {($param): ($param2)}' | jq -cr '' > /tmp/swissknife/workflow_params.json
+        }
+
+        mkdir -p /tmp/swissknife
+        touch /tmp/swissknife/workflow_params.json
+        echo '{}' | jq -j . > /tmp/swissknife/workflow_params.json
+
+        FILES_MODIFIED=""
+        get_modified_files_for_regex() {
+          FILES_MODIFIED=""
+          if [[ "$SEARCH_MODE" == "grep" ]]; then
+            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | grep $FINAL_GREP_FLAGS $1)
+            <<# parameters.use-divergence-point >>
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | grep $FINAL_GREP_FLAGS $1)
+            <</ parameters.use-divergence-point >>
+          else
+            FILES_MODIFIED=$(git diff --name-only origin/<< parameters.base-branch >>..HEAD | perl -nle "print if m{$1}")
+            <<# parameters.use-divergence-point >>
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD | perl -nle "print if m{$1}")
+            <</ parameters.use-divergence-point >>
+          fi
+        }
+
+        get_modified_files_for_commit_regex() {
+          if [[ "$SEARCH_MODE" == "grep" ]]; then
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | grep $FINAL_GREP_FLAGS $1)
+          else
+            FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1 | perl -nle "print if m{$1}")
+          fi
+        }
+
+        append_to_params() {
+          touch /tmp/swissknife/params_exist
+          current_data=`cat /tmp/swissknife/workflow_params.json`
+          echo $current_data | jq --arg param $1 '. + {($param): true}' | jq -cr '' > /tmp/swissknife/workflow_params.json
+        }
+
+        generate_branch_params() {
+          input_map=`echo '<< parameters.code-param-name-map >>'`
+          echo "$input_map" | jq -c '.[]' |
+          while IFS=$"\n" read -r mod; do
+              echo ""
+              regex=$(echo "$mod" | jq -r '.regex')
+              param_name=$(echo "$mod" | jq -r '.param_name')
+
+              echo "Processing param_name: $param_name regex: $regex";
+
+              if [[ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]]; then
+                get_modified_files_for_commit_regex $regex || true
+              else
+                get_modified_files_for_regex $regex || true
+              fi
+
+              if [ -z "$FILES_MODIFIED" ]
+              then
+                echo "Files not modified for $param_name";
+              else
+                echo "Files modified for $param_name"
+                echo "$FILES_MODIFIED"
+                echo "appending param to list of inputs"
+                echo ""
+                append_to_params $param_name
+
+                echo "Current Params:"
+                cat /tmp/swissknife/workflow_params.json
+                echo ""
+              fi
+          done
+        }
+
+        generate_all_params() {
+          input_map=`echo '<< parameters.code-param-name-map >>'`
+          echo "$input_map" | jq -c '.[]' |
+          while IFS=$"\n" read -r mod; do
+              echo ""
+              echo "Processing $mod"
+              regex=$(echo "$mod" | jq -r '.regex')
+              param_name=$(echo "$mod" | jq -r '.param_name')
+
+              append_to_params $param_name
+
+              echo "Current Params:"
+              cat /tmp/swissknife/workflow_params.json
+              echo ""
+          done
+        }
+
+        if [ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]; then
+          if [[ "run_all" == "<< parameters.run-mode-for-base-branch >>" ]]; then
+            generate_all_params
+          else
+            generate_branch_params
+          fi
+          exit 0;
+        fi
+
+        echo "Non base branch";
+        generate_branch_params
+  - continuation/continue:
+      configuration_path: << parameters.config-path >>
+      parameters: "/tmp/swissknife/workflow_params.json"
+

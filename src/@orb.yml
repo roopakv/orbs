@@ -7,3 +7,6 @@ description: >
   get the rerun job number, trigger pipeline if directory modified, publish github releases.
   #queue #runIfModified #artifacts #github #releases #triggerPipeline
   View this orb's source: https://github.com/roopakv/orbs
+
+orbs:
+  continuation: circleci/continuation@0.0.1

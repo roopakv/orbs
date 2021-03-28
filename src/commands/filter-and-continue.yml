@@ -52,6 +52,21 @@ parameters:
     default: ".circleci/continue_config.yml"
     description: >
       The location of the config to continue the pipeline with.
+  additional-param-map:
+    description: |
+      Any additional params that should be sent to the continue config. Pass in empty
+      json object `{}` if you have nothing specific to override.
+
+      Input should be json, something like '{"run_trigger_workflow": false}'
+    type: string
+    default: '{}'
+  pass-only-additional-params-thru:
+    description: |
+      If you are trying to run some jobs on your continue config but not look at what changed,
+      set this to true and pass the jobs you want ot run. This sets the additional params and ignores
+      everything from the code-param-name-map.
+    type: boolean
+    default: false
 steps:
   - run:
       name: Swissknife - Set Parameters and continue
@@ -74,6 +89,7 @@ steps:
         # Validate input JSON.
         echo "Validating input JSON";
         echo '<< parameters.code-param-name-map >>' | jq type || { echo "Invalid input map JSON"; exit 1; }
+        echo '<< parameters.additional-param-map >>' | jq type || { echo "Invalid additional param map JSON"; exit 1; }
 
         append_string_to_params() {
           current_data=`cat /tmp/swissknife/workflow_params.json`
@@ -83,6 +99,7 @@ steps:
         mkdir -p /tmp/swissknife
         touch /tmp/swissknife/workflow_params.json
         echo '{}' | jq -j . > /tmp/swissknife/workflow_params.json
+        echo '<< parameters.additional-param-map >>' | jq -j . > /tmp/swissknife/additional_params.json
 
         FILES_MODIFIED=""
         get_modified_files_for_regex() {
@@ -164,18 +181,38 @@ steps:
           done
         }
 
+        combine_params() {
+          echo "workflow params"
+          cat /tmp/swissknife/workflow_params.json
+          echo ""
+          echo "additional params"
+          cat /tmp/swissknife/additional_params.json
+          echo ""
+          if [[ "<< parameters.pass-only-additional-params-thru >>" == "false" ]]; then
+            jq -j -n --argfile o1 /tmp/swissknife/workflow_params.json --argfile o2 /tmp/swissknife/additional_params.json '$o1 * $o2' > /tmp/swissknife/final_params.json
+          else
+            echo "Passing thru only additional params"
+            cp /tmp/swissknife/additional_params.json /tmp/swissknife/final_params.json
+          fi
+          echo ""
+          echo "final params"
+          cat /tmp/swissknife/final_params.json
+        }
+
         if [ "$CIRCLE_BRANCH" == "<< parameters.base-branch >>" ]; then
           if [[ "run_all" == "<< parameters.run-mode-for-base-branch >>" ]]; then
             generate_all_params
           else
             generate_branch_params
           fi
+          combine_params
           exit 0;
         fi
 
         echo "Non base branch";
         generate_branch_params
+        combine_params
   - continuation/continue:
       configuration_path: << parameters.config-path >>
-      parameters: "/tmp/swissknife/workflow_params.json"
+      parameters: "/tmp/swissknife/final_params.json"
 

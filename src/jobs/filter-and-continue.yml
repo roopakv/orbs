@@ -57,6 +57,21 @@ parameters:
     default: ".circleci/continue_config.yml"
     description: >
       The location of the config to continue the pipeline with.
+  additional-param-map:
+    description: |
+      Any additional params that should be sent to the continue config. Pass in empty
+      json object `{}` if you have nothing specific to override.
+
+      Input should be json, something like '{"run_trigger_workflow": false}'
+    type: string
+    default: '{}'
+  pass-only-additional-params-thru:
+    description: |
+      If you are trying to run some jobs on your continue config but not look at what changed,
+      set this to true and pass the jobs you want ot run. This sets the additional params and ignores
+      everything from the code-param-name-map.
+    type: boolean
+    default: false
 steps:
   - checkout
   - filter-and-continue:
@@ -66,3 +81,5 @@ steps:
       code-param-name-map: << parameters.code-param-name-map >>
       search-mode: << parameters.search-mode >>
       config-path: << parameters.config-path >>
+      additional-param-map: << parameters.additional-param-map >>
+      pass-only-additional-params-thru: << parameters.pass-only-additional-params-thru >>

@@ -13,7 +13,7 @@ parameters:
       The file to check. By default this is .circleci/config.yml however in the case of monrepo mode,
       this file can be overriden to check the coontinue config.
     type: string
-    default: .circleci/configy.yml
+    default: .circleci/config.yml
   fail-if-dirty:
     description: |
       Fail if dirty

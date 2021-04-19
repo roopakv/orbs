@@ -8,6 +8,12 @@ parameters:
     description: The directory containing circleci config src relative to repo root.
     type: string
     default: .circleci/src
+  custom-config:
+    description: |
+      The file to check. By default this is .circleci/config.yml however in the case of monrepo mode,
+      this file can be overriden to check the coontinue config.
+    type: string
+    default: .circleci/config.yml
   fail-if-dirty:
     description: |
       Fail if dirty
@@ -61,7 +67,7 @@ steps:
         fi
 
         circleci config pack << parameters.directory-of-src >> > .circleci/config.yml
-        circleci config validate
+        circleci config validate << parameters.custom-config >>
   - when:
       condition: << parameters.fail-if-dirty >>
       steps:

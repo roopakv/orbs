@@ -35,6 +35,10 @@ parameters:
       '*' the wait will run only on the specified branch
     type: string
     default: "*"
+  repo-name:
+    description: The environment variable that holds the workflows repo. Defaults to the calling repo.
+    type: env_var_name
+    default: CIRCLE_PROJECT_REPONAME
 
 steps:
   - run:
@@ -55,7 +59,7 @@ steps:
           exit 0;
         fi
 
-        slug="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+        slug="<< parameters.vcs-type >>/${CIRCLE_PROJECT_USERNAME}/$<< parameters.repo-name >>"
         branch_to_consider="<< parameters.branch-to-consider >>"
 
         # Assume there is one workflow running.

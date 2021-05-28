@@ -114,7 +114,7 @@ steps:
             if [[ $running_wf_start_time < $current_workflow_start_time ]] ; then
               can_i_run="false"
               break
-            elif [[ $running_wf_start_time > $current_workflow_start_time ]] && [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+            elif [[ $running_wf_start_time > $current_workflow_start_time ]] && [[ "<< parameters.auto-cancel-redundant >>" == "true" ]]; then
               echo "Newer workflow exists. Killing workflow by cancelling";
               kill_workflow
             fi

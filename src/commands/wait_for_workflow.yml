@@ -21,7 +21,7 @@ parameters:
     description: |
       If true and there are newer workflows in the queue, dies without failing the job.
       This is similar to CircleCI's "auto-cancelling a redundant build" feature, except
-      it will not cancel already running pipelines that have progressed past wait_for_workflow.
+      it will not cancel already running workflows that have progressed past wait_for_workflow.
     type: string
     default: "true"
   workflow-name:

@@ -17,6 +17,13 @@ parameters:
     description: If true and time exceeds max wait time, dies without failing the job
     type: string
     default: "true"
+  auto-cancel-redundant:
+    description: |
+      If true and there are newer workflows in the queue, dies without failing the job.
+      This is similar to CircleCI's "auto-cancelling a redundant build" feature, except
+      it will not cancel already running pipelines that have progressed past wait_for_workflow.
+    type: string
+    default: "true"
   workflow-name:
     description: The type of workflows to wait for. This can be a regex
     type: string
@@ -107,6 +114,9 @@ steps:
             if [[ $running_wf_start_time < $current_workflow_start_time ]] ; then
               can_i_run="false"
               break
+            elif [[ $running_wf_start_time > $current_workflow_start_time ]] && [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+              echo "Newer workflow exists. Killing workflow by cancelling";
+              kill_workflow
             fi
           done < /tmp/swissknife/running_workflows.txt
         }

@@ -1,0 +1,43 @@
+description: |
+  Finds all modified files for a given commit and base-branch
+
+parameters:
+  base-branch:
+    description: |
+      The base branch for the repo. Based on the parameter "run-mode-for-base-branch",
+      you can either run all workflows or only the workflows of code modified in the last
+      commit.
+    type: string
+    default: master
+steps:
+  - run:
+      name: Swissknife - Set Parameters and continue
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
+        circleci-agent >/dev/null 2>&1 || { echo >&2 "No Circle CI agent. These are in all Circle CI containers"; exit 1; }
+        if [[ "$CIRCLE_TOKEN" == "" ]]; then
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          exit 1;
+        fi
+
+        mkdir -p /tmp/swissknife
+        touch /tmp/swissknife/modified_files.txt
+
+        FILES_MODIFIED=""
+        get_modified_files() {
+            FILES_MODIFIED=""
+            FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/<< parameters.base-branch >>)..HEAD)
+        }
+
+        get_modified_files()
+        if [ -z "$FILES_MODIFIED" ]
+        then
+          echo "Files not modified"
+        else
+          echo "$FILES_MODIFIED" >> /tmp/swissknife/modified_files.txt
+        fi
+

@@ -8,7 +8,6 @@ parameters:
     type: string
     default: master
 steps:
-steps:
   - run:
       name: Swissknife - job number
       environment:

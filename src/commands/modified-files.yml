@@ -4,14 +4,12 @@ description: |
 parameters:
   base-branch:
     description: |
-      The base branch for the repo. Based on the parameter "run-mode-for-base-branch",
-      you can either run all workflows or only the workflows of code modified in the last
-      commit.
+      The base branch for the repo.
     type: string
     default: master
 steps:
   - run:
-      name: Swissknife - Set Parameters and continue
+      name: Swissknife - Get Changed Files
       command: |
         if [ -z "$BASH" ]; then
           echo Bash not installed.
@@ -19,10 +17,6 @@ steps:
         fi
         git status >/dev/null 2>&1 || { echo >&2 "Not in a git directory or no git"; exit 1; }
         circleci-agent >/dev/null 2>&1 || { echo >&2 "No Circle CI agent. These are in all Circle CI containers"; exit 1; }
-        if [[ "$CIRCLE_TOKEN" == "" ]]; then
-          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
-          exit 1;
-        fi
 
         mkdir -p /tmp/swissknife
         touch /tmp/swissknife/modified_files.txt
@@ -39,5 +33,6 @@ steps:
           echo "Files not modified"
         else
           echo "$FILES_MODIFIED" >> /tmp/swissknife/modified_files.txt
+          cat /tmp/swissknife/modified_files.txt
         fi
 

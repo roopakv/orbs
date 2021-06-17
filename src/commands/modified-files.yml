@@ -8,10 +8,8 @@ parameters:
     type: string
     default: master
 steps:
-steps:
   - run:
       name: Swissknife - job number
       environment:
         BASE_BRANCH: << parameters.base-branch >>
       command: << include(../scripts/modified-files.sh) >>
-

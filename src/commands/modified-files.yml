@@ -14,4 +14,3 @@ steps:
       environment:
         BASE_BRANCH: << parameters.base-branch >>
       command: << include(../scripts/modified-files.sh) >>
-

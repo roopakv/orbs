@@ -9,7 +9,7 @@ parameters:
     default: master
 steps:
   - run:
-      name: Swissknife - job number
+      name: Swissknife - Get Modified Files
       environment:
         BASE_BRANCH: << parameters.base-branch >>
       command: << include(../scripts/modified-files.sh) >>

@@ -9,8 +9,11 @@ touch /tmp/swissknife/modified_files.txt
 
 FILES_MODIFIED=""
 get_modified_files() {
-    FILES_MODIFIED=""
-    FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/${BASE_BRANCH})..HEAD)
+    if [[ "$CIRCLE_BRANCH" == "${BASE_BRANCH}" ]]; then
+        FILES_MODIFIED=$(git diff --name-only $(git merge-base HEAD origin/${BASE_BRANCH})..HEAD)
+    else
+        FILES_MODIFIED=$(git diff --name-only HEAD HEAD~1)
+    fi
 }
 
 get_modified_files

@@ -2,7 +2,9 @@ description: |
   Triggers a pipeline on given branch. Also allows to install the trigger script and not trigger into
   /tmp/swissknife/trigger_pipeline.sh
   it can be called with the arguments as follows
-  /tmp/swissknife/trigger_pipeline.sh vcstype username reponame branch|tag '{"custom_params": "here"}'
+  /tmp/swissknife/trigger_pipeline.sh vcstype username reponame branch '{"custom_params": "here"}'
+  OR
+  /tmp/swissknife/trigger_pipeline.sh vcstype username reponame -t tag '{"custom_params": "here"}'
 parameters:
   repo-name:
     type: env_var_name

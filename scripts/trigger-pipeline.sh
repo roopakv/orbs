@@ -11,7 +11,6 @@ fi
 
 mkdir -p /tmp/swissknife/
 
-if [[ "$PARAM_BRANCH_ENV_VAR" != "" ]]; then
 cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
   #!/bin/bash -x
   echo "----------------------------------------"
@@ -20,18 +19,28 @@ cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
   export vcs_type="$1";
   export username="$2";
   export reponame="$3";
-  export branch="$4";
-  export params="$5";
+  if [[ $4 == "-t" ]]; then
+    export tag="$5";
+    export params="$6";
+    export body='{
+      "tag": "'$tag'",
+      "parameters": '"$params"'
+    }';
+  else
+    export branch="$4";
+    export params="$5";
+    export body='{
+      "branch": "'$branch'",
+      "parameters": '"$params"'
+    }';
+  fi
 
   trigger_workflow() {
-    curl --silent -X POST \
+    curl -v -X POST \
       "https://circleci.com/api/v2/project/$vcs_type/$username/$reponame/pipeline?circle-token=${CIRCLE_TOKEN}" \
       -H 'Accept: */*' \
       -H 'Content-Type: application/json' \
-      -d '{
-        "branch": "'$branch'",
-        "parameters": '"$params"'
-      }'
+      -d "${body}"
   }
 
   trigger_workflow
@@ -39,35 +48,6 @@ cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
   echo "Finished triggering pipeline"
   echo "----------------------------------------"
 EOF
-else
-cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
-  #!/bin/bash -x
-  echo "----------------------------------------"
-  echo "Triggering Pipeline"
-
-  export vcs_type="$1";
-  export username="$2";
-  export reponame="$3";
-  export tag="$4";
-  export params="$5";
-
-  trigger_workflow() {
-    curl --silent -X POST \
-      "https://circleci.com/api/v2/project/$vcs_type/$username/$reponame/pipeline?circle-token=${CIRCLE_TOKEN}" \
-      -H 'Accept: */*' \
-      -H 'Content-Type: application/json' \
-      -d '{
-        "tag": "'$tag'",
-        "parameters": '"$params"'
-      }'
-  }
-
-  trigger_workflow
-
-  echo "Finished triggering pipeline"
-  echo "----------------------------------------"
-EOF
-fi
 
 chmod +x /tmp/swissknife/trigger_pipeline.sh
 
@@ -80,6 +60,6 @@ if [[ "$SKIP_TRIGGER" == "0" || "$SKIP_TRIGGER" == "false" ]]; then
   if [[ "$PARAM_BRANCH_ENV_VAR" != "" ]]; then
     /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" "$PARAM_BRANCH" "$CUSTOM_PARAMS"
   else
-    /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" "$PARAM_TAG" "$CUSTOM_PARAMS"
+    /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" -t "$PARAM_TAG" "$CUSTOM_PARAMS"
   fi
 fi

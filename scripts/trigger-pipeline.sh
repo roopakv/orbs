@@ -36,7 +36,7 @@ cat > /tmp/swissknife/trigger_pipeline.sh <<'EOF'
   fi
 
   trigger_workflow() {
-    curl -v -X POST \
+    curl --silent -X POST \
       "https://circleci.com/api/v2/project/$vcs_type/$username/$reponame/pipeline?circle-token=${CIRCLE_TOKEN}" \
       -H 'Accept: */*' \
       -H 'Content-Type: application/json' \

@@ -57,7 +57,7 @@ PARAM_BRANCH=$(printf '%s\n' "${!PARAM_BRANCH_ENV_VAR}")
 PARAM_TAG=$(printf '%s\n' "${!PARAM_TAG_ENV_VAR}")
 
 if [[ "$SKIP_TRIGGER" == "0" || "$SKIP_TRIGGER" == "false" ]]; then
-  if [[ "$PARAM_BRANCH_ENV_VAR" != "" ]]; then
+  if [[ "$PARAM_TAG" == "" ]]; then
     /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" "$PARAM_BRANCH" "$CUSTOM_PARAMS"
   else
     /tmp/swissknife/trigger_pipeline.sh "$VCS_TYPE" "$PARAM_USER" "$PARAM_REPO" -t "$PARAM_TAG" "$CUSTOM_PARAMS"

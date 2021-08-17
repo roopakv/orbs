@@ -70,7 +70,7 @@ parameters:
   additional-steps:
     description: Additional steps to run in filter and continue
     type: steps
-    default: []  
+    default: []
 steps:
   - steps: << parameters.additional-steps >>
   - run:

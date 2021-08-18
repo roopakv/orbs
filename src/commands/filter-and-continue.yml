@@ -67,7 +67,12 @@ parameters:
       everything from the code-param-name-map.
     type: boolean
     default: false
+  pre-steps:
+    description: Additional steps to run first in filter and continue
+    type: steps
+    default: []
 steps:
+  - steps: << parameters.pre-steps >>
   - run:
       name: Swissknife - Set Parameters and continue
       command: |

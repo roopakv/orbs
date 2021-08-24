@@ -63,7 +63,7 @@ steps:
           fi
           curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
         else
-          circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or chaneg swissknife params"; exit 1; }
+          circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or update swissknife params"; exit 1; }
         fi
 
         circleci config pack << parameters.directory-of-src >> > .circleci/config.yml

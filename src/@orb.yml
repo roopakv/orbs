@@ -10,6 +10,9 @@ description: >
 
 orbs:
   continuation: circleci/continuation@0.1.2
-  display:
+
+display:
+  source_url: "https://github.com/roopakv/orbs"
+  home_url: "https://orb.swissknife.dev"
     source_url: "https://github.com/roopakv/orbs"
 

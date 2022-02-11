@@ -46,8 +46,6 @@ steps:
           exit 0;
         fi
 
-        api_endpoint="api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job"
-
         mkdir -p /tmp/swissknife
 
         # This is a global variable used to get return value for get_job_status
@@ -55,8 +53,7 @@ steps:
         job_number=""
 
         get_job_status() {
-          wf_url="https://circleci.com/$api_endpoint?circle-token=${CIRCLE_TOKEN}"
-          curl -f -s $wf_url > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
+          curl --header 'authorization: Basic ${CIRCLE_TOKEN}' -f -s https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
           job_status=$(jq -r '.items[] | select(.name=="<< parameters.job-name >>") | .status' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
           job_number=$(jq -r '.items[] | select(.name=="<< parameters.job-name >>") | .job_number' /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
         }

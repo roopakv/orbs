@@ -66,13 +66,13 @@ steps:
           circleci >/dev/null 2>&1 || { echo >&2 "No Circle CI CLI. Either pre-install or update swissknife params"; exit 1; }
         fi
 
-        circleci config pack << parameters.directory-of-src >> > .circleci/config.yml
+        circleci config pack << parameters.directory-of-src >> > << parameters.custom-config >>
         circleci config validate << parameters.custom-config >>
   - when:
       condition: << parameters.fail-if-dirty >>
       steps:
         - fail_if_dirty:
-            pattern: .*circleci/config.yml
+            pattern: << parameters.custom-config >>
             invert-pattern: false
             custom-error-message: << parameters.custom-error-message >>
             print-modified-files: true

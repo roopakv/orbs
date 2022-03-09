@@ -18,7 +18,7 @@ parameters:
       be a factor into how often to bust. We don't want to do it too often or too few times.
     type: enum
     default: "1-day"
-    enum: ["6-hours", "12-hours", "1-day", "1-week", "1-month", "3-month"]
+    enum: ["3-hours", "6-hours", "12-hours", "1-day", "1-week", "1-month", "3-month"]
   include-branch-in-cache:
     description: |
       If set this will include the branch will be included in the cache. This means that caches
@@ -63,6 +63,10 @@ steps:
         time_period_secs=""
 
         case "<< parameters.ttl-period >>" in
+          3-hours)
+            time_period_secs=10800
+            ;;
+
           6-hours)
             time_period_secs=21600
             ;;

@@ -24,7 +24,7 @@ steps:
       name: Github release with specified tag
       command: |
         mkdir -p /tmp/swissknife/
-        wget -P /tmp/swissknife/ -qi - https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2
+        wget -P /tmp/swissknife/ -qi - https://github.com/github-release/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2
 
         tar xjf /tmp/swissknife/*.tar.bz2 -C /tmp/swissknife
 

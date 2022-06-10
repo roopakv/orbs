@@ -1,0 +1,97 @@
+description: |
+  This command waits for a job(s) in this workflow. Since right now Circle CI doesnt let
+  you queue up jobs irrespective of whether they fail or not. This is a faux queue where
+  the command stalls till the other job succeeds.
+  This requires a Circle CI token be set as $CIRCLE_TOKEN
+
+parameters:
+  job-names:
+    description: The job or jobs on which to wait. If job not found continue immediately. For multiple jobs the list must be comma separated.
+    type: string
+  max-wait-time:
+    description: |
+      The max wait time in seconds a job should wait for before killing itself.
+    type: string
+    default: "1800"
+  kill-gracefully:
+    description: If true and time exceeds max wait time, completes and lets future steps continue
+    type: string
+    default: "true"
+  sleep-time-between-checks:
+    description: How long to sleep between checks.
+    type: string
+    default: "30"
+  run-on-branch:
+    description: |
+      The branches to actually wait on. By default this waits on all branches. If set to anything but
+      '*' the wait will run only on the specified branch
+    type: string
+    default: "*"
+
+steps:
+  - run:
+      name: Swissknife - Wait for job in workflow
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+        if [[ "$CIRCLE_TOKEN" == "" ]]; then
+          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+          exit 1;
+        fi
+
+        if [[ "<< parameters.run-on-branch >>" != "*" && "<< parameters.run-on-branch >>" != "$CIRCLE_BRANCH" ]]; then
+          echo "Chosen to run only on << parameters.run-on-branch >> and currently we are on $CIRCLE_BRANCH, exiting";
+          exit 0;
+        fi
+
+        mkdir -p /tmp/swissknife
+
+
+        get_job_status() {
+          local NAME_OF_JOB="$1"
+          local STATUS=""
+          local NUMBER=""
+
+          curl --header 'Circle-Token: $CIRCLE_TOKEN' -f -s https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
+          STATUS=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .status" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+          NUMBER=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .job_number" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+          echo "${STATUS} ${NUMBER}"
+        }
+
+
+        job_list="<< parameters.job-names >>"
+
+        for job_name in ${job_list//,/ }
+        do
+          # Reset job status, job number and wait time
+          job_status=""
+          job_number=""
+          current_wait_time=0
+
+          echo "Starting to check status of ${job_name}"
+          while true; do
+            read job_status job_number < <(get_job_status ${job_name})
+            if [[ "$job_status" == "success" || "$job_status" == "failed" || "$job_status" == "canceled" || "$job_status" == "" ]]; then
+              echo "Job, ${job_name}, has completed!"
+              break
+            else
+              echo "Looks like the other guy ($job_number) is still not done ($job_status)."
+              echo "Going to sleep for << parameters.sleep-time-between-checks >>"
+              sleep << parameters.sleep-time-between-checks >>
+              current_wait_time=$(( current_wait_time + << parameters.sleep-time-between-checks >> ))
+            fi
+
+            if (( $current_wait_time > << parameters.max-wait-time >> )); then
+              if [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+                echo "Proceeding with future steps";
+                break
+              else
+                echo "Failing job by exiting forcefully";
+                exit 1;
+              fi
+            fi
+          done
+        done

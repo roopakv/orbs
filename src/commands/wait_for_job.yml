@@ -1,5 +1,5 @@
 description: |
-  This command waits for a job(s) in this workflow. Since right now Circle CI doesnt let
+  This command waits for a job(s) in this workflow. Since right now Circle CI doesn't let
   you queue up jobs irrespective of whether they fail or not. This is a faux queue where
   the command stalls till the other job succeeds.
   This requires a Circle CI token be set as $CIRCLE_TOKEN

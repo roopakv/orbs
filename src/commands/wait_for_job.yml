@@ -5,7 +5,7 @@ description: |
   This requires a Circle CI token be set as $CIRCLE_TOKEN
 
 parameters:
-  job-names:
+  job-name:
     description: The job or jobs on which to wait. If job not found continue immediately. For multiple jobs the list must be comma separated.
     type: string
   max-wait-time:
@@ -27,6 +27,12 @@ parameters:
       '*' the wait will run only on the specified branch
     type: string
     default: "*"
+  circleci-api-key:
+    default: CIRCLE_TOKEN
+    description: >-
+      In case you use a different Environment Variable Name than
+      CIRCLE_TOKEN, supply it here.
+    type: env_var_name
 
 steps:
   - run:
@@ -37,8 +43,8 @@ steps:
           exit 1
         fi
         hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
-        if [[ "$CIRCLE_TOKEN" == "" ]]; then
-          echo "CIRCLE_TOKEN not set. Set a token to access the circle API in the env var CIRCLE_TOKEN";
+        if [[ "$<< parameters.circleci-api-key >>" == "" ]]; then
+          echo "<< parameters.circleci-api-key >> not set. Set a token to access the circle API in the env var << parameters.circleci-api-key >>";
           exit 1;
         fi
 
@@ -55,7 +61,7 @@ steps:
           local STATUS=""
           local NUMBER=""
 
-          curl --header 'Circle-Token: $CIRCLE_TOKEN' -f -s https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
+          curl --header "Circle-Token: $<< parameters.circleci-api-key >>" -f -s https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
           STATUS=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .status" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
           NUMBER=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .job_number" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
           echo "${STATUS} ${NUMBER}"

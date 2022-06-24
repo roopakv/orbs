@@ -1,0 +1,107 @@
+description: |
+  This command approves a hold job(s) by name.
+  This requires a Circle CI token be set as $t
+
+parameters:
+  job-name:
+    description: A list of comma separated hold jobs to approve
+    type: string
+  run-on-branch:
+    description: |
+      The branches to actually wait on. By default this waits on all branches. If set to anything but
+      '*' the wait will run only on the specified branch
+    type: string
+    default: "*"
+  kill-gracefully:
+    description: If true it completes and lets future steps continue
+    type: string
+    default: "true"
+  when:
+    description: Allows the user to set when conditions
+    type: enum
+    enum: [
+      "always",
+      "on_success",
+      "on_fail"
+    ]
+    default: "on_success"
+  circleci-api-key:
+    default: CIRCLE_TOKEN
+    description: >-
+      In case you use a different Environment Variable Name than
+      CIRCLE_TOKEN, supply it here.
+    type: env_var_name
+
+steps:
+  - run:
+      name: Swissknife - Approve On Hold Job(s) by Name
+      when: << parameters.when >>
+      command: |
+        if [ -z "$BASH" ]; then
+          echo Bash not installed.
+          exit 1
+        fi
+        hash jq 2>/dev/null || { echo >&2 "jq is not installed.  Aborting."; exit 1; }
+        if [[ "$<< parameters.circleci-api-key >>" == "" ]]; then
+          echo "<< parameters.circleci-api-key >> not set. Set a token to access the circle API in the env var << parameters.circleci-api-key >>";
+          exit 1;
+        fi
+
+        if [[ "<< parameters.run-on-branch >>" != "*" && "<< parameters.run-on-branch >>" != "$CIRCLE_BRANCH" ]]; then
+          echo "Chosen to run only on << parameters.run-on-branch >> and currently we are on $CIRCLE_BRANCH, exiting";
+          exit 0;
+        fi
+
+        mkdir -p /tmp/swissknife
+
+
+        get_job_id_and_type() {
+          local NAME_OF_JOB="$1"
+          local ID=""
+
+          curl --header "Circle-Token: $<< parameters.circleci-api-key >>" -f -s https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/job > /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json
+          ID=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .id" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+          TYPE=$(jq -r ".items[] | select(.name==\"${NAME_OF_JOB}\") | .type" /tmp/swissknife/wf_$CIRCLE_WORKFLOW_ID.json)
+          echo "${ID} ${TYPE}"
+        }
+
+
+        job_list="<< parameters.job-name >>"
+
+        for job_name in ${job_list//,/ }
+        do
+          # Reset job id and job type
+          job_id=""
+          job_type=""
+
+          echo "Checking type of ${job_name}...."
+
+          read job_id job_type < <(get_job_id_and_type ${job_name})
+          if [[ "$job_type" == "approval" ]]; then
+            echo "${job_name} is an approval job!"
+            echo "Moving onto approval...."
+            status_code=$(curl --write-out %{http_code} --silent --output /dev/null --request POST "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}/approve/${job_id}" --header "Circle-Token: ${<< parameters.circleci-api-key >>}")
+
+            if [[ "$status_code" -eq 202 ]] ; then
+              echo "${job_name} has been approved!"
+            else
+              echo "Something went wrong! Status Code: ${status_code}"
+              if [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+                echo "Proceeding with future steps";
+                break
+              else
+                echo "Failing job by exiting forcefully";
+                exit 1;
+              fi
+            fi
+          else
+            echo "${job_name} is NOT approval job!"
+            if [[ "<< parameters.kill-gracefully >>" == "true" ]]; then
+              echo "Proceeding with future steps";
+              break
+            else
+              echo "Failing job by exiting forcefully";
+              exit 1;
+            fi
+          fi
+        done

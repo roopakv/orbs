@@ -68,7 +68,7 @@ steps:
         }
 
 
-        job_list="<< parameters.job-names >>"
+        job_list="<< parameters.job-name >>"
 
         for job_name in ${job_list//,/ }
         do
